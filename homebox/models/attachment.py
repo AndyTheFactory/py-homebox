@@ -1,0 +1,55 @@
+from __future__ import annotations
+
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from . import types
+
+
+class Attachment(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    created_at: Optional[str] = Field(
+        default=None, description='CreatedAt holds the value of the "created_at" field.'
+    )
+    edges: Optional[AttachmentEdges] = Field(
+        default=None,
+        description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the AttachmentQuery when eager-loading is set.",
+    )
+    id: Optional[str] = Field(default=None, description="ID of the ent.")
+    mime_type: Optional[str] = Field(
+        default=None, description='MimeType holds the value of the "mime_type" field.'
+    )
+    path: Optional[str] = Field(
+        default=None, description='Path holds the value of the "path" field.'
+    )
+    primary: Optional[bool] = Field(
+        default=None, description='Primary holds the value of the "primary" field.'
+    )
+    title: Optional[str] = Field(
+        default=None, description='Title holds the value of the "title" field.'
+    )
+    type: Optional[types.AttachmentType] = Field(
+        default=None, description='Type holds the value of the "type" field.'
+    )
+    updated_at: Optional[str] = Field(
+        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
+    )
+
+
+class AttachmentEdges(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    item: Optional[Item] = Field(
+        default=None, description="Item holds the value of the item edge."
+    )
+    thumbnail: Optional[Attachment] = Field(
+        default=None, description="Thumbnail holds the value of the thumbnail edge."
+    )
+
+
+Attachment.model_rebuild()
+AttachmentEdges.model_rebuild()
