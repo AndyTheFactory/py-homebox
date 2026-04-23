@@ -12,46 +12,6 @@ class MaintenanceEntry(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    cost: Optional[float] = Field(
-        default=None, description='Cost holds the value of the "cost" field.'
-    )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
-    date: Optional[str] = Field(
-        default=None, description='Date holds the value of the "date" field.'
-    )
-    description: Optional[str] = Field(
-        default=None,
-        description='Description holds the value of the "description" field.',
-    )
-    edges: Optional[MaintenanceEntryEdges] = Field(
-        default=None,
-        description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MaintenanceEntryQuery when eager-loading is set.",
-    )
-    id: Optional[str] = Field(default=None, description="ID of the ent.")
-    item_id: Optional[str] = Field(
-        default=None, description='ItemID holds the value of the "item_id" field.'
-    )
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
-    scheduled_date: Optional[str] = Field(
-        default=None,
-        description='ScheduledDate holds the value of the "scheduled_date" field.',
-    )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
-
-
-MaintenanceEntryEdges = ItemFieldEdges
-
-
-class MaintenanceEntry(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
     completedDate: Optional[str] = None
     cost: Optional[str] = Field(default=None, examples=["0"])
     description: Optional[str] = None
