@@ -6,6 +6,11 @@ on:
     branches:
       - main
 
+# Restrict the default token to the minimum required across all jobs.
+# Individual jobs that need broader access override this below.
+permissions:
+  contents: read
+
 jobs:
   # -------------------------------------------------------------------------
   # Code formatting – ruff format
@@ -13,6 +18,8 @@ jobs:
   format:
     name: Code Formatting
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -27,6 +34,8 @@ jobs:
   lint:
     name: Linting (ruff)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -41,6 +50,8 @@ jobs:
   pylint:
     name: Pylint (min score 8.5)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -55,6 +66,8 @@ jobs:
   type-check:
     name: Type Check (ty)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -69,6 +82,8 @@ jobs:
   spell-check:
     name: Spell Check (codespell)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -83,6 +98,8 @@ jobs:
   test:
     name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -109,7 +126,10 @@ jobs:
     needs: test
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
+

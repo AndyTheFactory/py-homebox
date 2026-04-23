@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
 
+# Restrict the default token to the minimum required.
+permissions:
+  contents: read
+
 jobs:
   # -------------------------------------------------------------------------
   # Smoke-test the built wheel on all supported Python versions before
@@ -12,6 +16,8 @@ jobs:
   smoke-test:
     name: Smoke Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: true
       matrix:
@@ -46,6 +52,8 @@ jobs:
     needs: smoke-test
     runs-on: ubuntu-latest
     environment: pypi
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
