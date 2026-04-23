@@ -7,10 +7,9 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from typing import Any
-
 from homebox.models.types import ItemType
 
+from .attachment import Attachment
 from .labels import LabelSummary
 from .locations import LocationSummary
 
@@ -209,7 +208,7 @@ class ItemAttachment(BaseModel):
     mimeType: Optional[str] = None
     path: Optional[str] = None
     primary: Optional[bool] = None
-    thumbnail: Optional[Any] = None
+    thumbnail: Optional[Attachment] = None
     title: Optional[str] = None
     type: Optional[str] = None
     updatedAt: Optional[str] = None
