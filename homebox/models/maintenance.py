@@ -7,6 +7,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .items import ItemFieldEdges
+
 
 class MaintenanceEntry(BaseModel):
     model_config = ConfigDict(
@@ -96,7 +98,7 @@ class MaintenanceEntryWithDetails(BaseModel):
     scheduledDate: Optional[str] = None
 
 
-MaintenanceEntry.model_rebuild()
+MaintenanceEntry.model_rebuild(raise_errors=False)
 
 __all__ = [
     "MaintenanceEntry",

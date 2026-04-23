@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -43,13 +43,11 @@ class AttachmentEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    item: Optional[Item] = Field(
-        default=None, description="Item holds the value of the item edge."
-    )
+    item: Optional[Any] = Field(default=None, description="Item holds the value of the item edge.")
     thumbnail: Optional[Attachment] = Field(
         default=None, description="Thumbnail holds the value of the thumbnail edge."
     )
 
 
-Attachment.model_rebuild()
-AttachmentEdges.model_rebuild()
+Attachment.model_rebuild(raise_errors=False)
+AttachmentEdges.model_rebuild(raise_errors=False)

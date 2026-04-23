@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from homebox.models.types import ItemType
 
-from . import ent
+from . import attachment as ent
 from .labels import LabelSummary
 from .locations import LocationSummary
 
@@ -184,9 +184,7 @@ class ItemFieldEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    item: Optional[Item] = Field(
-        default=None, description="Item holds the value of the item edge."
-    )
+    item: Optional[Item] = Field(default=None, description="Item holds the value of the item edge.")
 
 
 class DuplicateOptions(BaseModel):
@@ -366,9 +364,9 @@ class PaginationResultRepoItemSummary(BaseModel):
     total: Optional[int] = None
 
 
-Item.model_rebuild()
-ItemEdges.model_rebuild()
-ItemField.model_rebuild()
+Item.model_rebuild(raise_errors=False)
+ItemEdges.model_rebuild(raise_errors=False)
+ItemField.model_rebuild(raise_errors=False)
 
 __all__ = [
     "DuplicateOptions",

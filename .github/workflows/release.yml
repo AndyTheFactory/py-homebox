@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Smoke-test the built wheel on all supported Python versions before
+  # publishing to PyPI.  All three versions must pass before publish runs.
+  # -------------------------------------------------------------------------
+  smoke-test:
+    name: Smoke Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Build distribution packages
+        run: uv build
+
+      # Reinstall the project from the freshly built wheel (non-editable)
+      # so we test exactly what will be published to PyPI.
+      - name: Reinstall from built wheel
+        run: uv pip install dist/*.whl --force-reinstall
+
+      - name: Run smoke tests
+        run: uv run pytest tests/smoke_test.py -v
+
+  # -------------------------------------------------------------------------
+  # Build and publish to PyPI – only runs after all smoke tests pass.
+  # Requires a PYPI_API_KEY secret configured in the repository / environment.
+  # -------------------------------------------------------------------------
+  publish:
+    name: Publish to PyPI
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Build distribution packages
+        run: uv build
+
+      - name: Publish to PyPI
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_KEY }}

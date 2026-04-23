@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Location(BaseModel):
@@ -116,9 +116,9 @@ class TreeItem(BaseModel):
     type: Optional[str] = None
 
 
-TreeItem.model_rebuild()
+TreeItem.model_rebuild(raise_errors=False)
 
-Location.model_rebuild()
+Location.model_rebuild(raise_errors=False)
 
 __all__ = [
     "LocationCreate",

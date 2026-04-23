@@ -60,12 +60,10 @@ class AuthTokensEdges(BaseModel):
     roles: Optional[AuthRoles] = Field(
         default=None, description="Roles holds the value of the roles edge."
     )
-    user: Optional[User] = Field(
-        default=None, description="User holds the value of the user edge."
-    )
+    user: Optional[User] = Field(default=None, description="User holds the value of the user edge.")
 
 
-AuthRoles.model_rebuild()
-AuthRolesEdges.model_rebuild()
-AuthTokens.model_rebuild()
-AuthTokensEdges.model_rebuild()
+AuthRoles.model_rebuild(raise_errors=False)
+AuthRolesEdges.model_rebuild(raise_errors=False)
+AuthTokens.model_rebuild(raise_errors=False)
+AuthTokensEdges.model_rebuild(raise_errors=False)

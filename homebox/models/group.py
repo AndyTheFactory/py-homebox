@@ -139,6 +139,6 @@ class ValueOverTime(BaseModel):
     valueAtStart: Optional[float] = None
 
 
-Group.model_rebuild()
-GroupEdges.model_rebuild()
-GroupInvitationToken.model_rebuild()
+Group.model_rebuild(raise_errors=False)
+GroupEdges.model_rebuild(raise_errors=False)
+GroupInvitationToken.model_rebuild(raise_errors=False)

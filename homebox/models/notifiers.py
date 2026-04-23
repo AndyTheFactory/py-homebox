@@ -44,9 +44,7 @@ class NotifierEdges(BaseModel):
     group: Optional[Group] = Field(
         default=None, description="Group holds the value of the group edge."
     )
-    user: Optional[User] = Field(
-        default=None, description="User holds the value of the user edge."
-    )
+    user: Optional[User] = Field(default=None, description="User holds the value of the user edge.")
 
 
 class NotifierCreate(BaseModel):
@@ -81,8 +79,8 @@ class NotifierUpdate(BaseModel):
     url: Optional[str] = None
 
 
-Notifier.model_rebuild()
-NotifierEdges.model_rebuild()
+Notifier.model_rebuild(raise_errors=False)
+NotifierEdges.model_rebuild(raise_errors=False)
 
 __all__ = [
     "NotifierCreate",

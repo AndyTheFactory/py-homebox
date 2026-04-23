@@ -1,3 +1,5 @@
+"""Client classes for interacting with the Homebox REST API."""
+
 from __future__ import annotations
 
 from typing import Optional
@@ -55,9 +57,7 @@ class HomeboxClient:
         if provider:
             params["provider"] = provider
 
-        response = self._request(
-            "post", "/v1/users/login", params=params, data=login_form.dict()
-        )
+        response = self._request("post", "/v1/users/login", params=params, data=login_form.dict())
         token_response = models.TokenResponse(**response)
         self.token = token_response.token
         self.headers["Authorization"] = f"Bearer {self.token}"
@@ -118,21 +118,15 @@ class GroupsClient:
         return models.Group(**self.client._request("get", "/v1/groups"))
 
     def update_group(self, data: models.GroupUpdate) -> models.Group:
-        return models.Group(
-            **self.client._request("put", "/v1/groups", data=data.dict())
-        )
+        return models.Group(**self.client._request("put", "/v1/groups", data=data.dict()))
 
-    def create_group_invitation(
-        self, data: models.GroupInvitationCreate
-    ) -> models.GroupInvitation:
+    def create_group_invitation(self, data: models.GroupInvitationCreate) -> models.GroupInvitation:
         return models.GroupInvitation(
             **self.client._request("post", "/v1/groups/invitations", data=data.dict())
         )
 
     def get_group_statistics(self) -> models.GroupStatistics:
-        return models.GroupStatistics(
-            **self.client._request("get", "/v1/groups/statistics")
-        )
+        return models.GroupStatistics(**self.client._request("get", "/v1/groups/statistics"))
 
     def get_label_statistics(self) -> list[models.TotalsByOrganizer]:
         return [
@@ -155,9 +149,7 @@ class GroupsClient:
         if end:
             params["end"] = end
         return models.ValueOverTime(
-            **self.client._request(
-                "get", "/v1/groups/statistics/purchase-price", params=params
-            )
+            **self.client._request("get", "/v1/groups/statistics/purchase-price", params=params)
         )
 
 
@@ -192,9 +184,7 @@ class ItemsClient:
         )
 
     def create_item(self, data: models.ItemCreate) -> models.ItemSummary:
-        return models.ItemSummary(
-            **self.client._request("post", "/v1/items", data=data.dict())
-        )
+        return models.ItemSummary(**self.client._request("post", "/v1/items", data=data.dict()))
 
     def export_items(self) -> str:
         return self.client._request("get", "/v1/items/export")
@@ -213,17 +203,13 @@ class ItemsClient:
         return models.ItemOut(**self.client._request("get", f"/v1/items/{id}"))
 
     def update_item(self, id: str, data: models.ItemUpdate) -> models.ItemOut:
-        return models.ItemOut(
-            **self.client._request("put", f"/v1/items/{id}", data=data.dict())
-        )
+        return models.ItemOut(**self.client._request("put", f"/v1/items/{id}", data=data.dict()))
 
     def delete_item(self, id: str):
         self.client._request("delete", f"/v1/items/{id}")
 
     def patch_item(self, id: str, data: models.ItemPatch) -> models.ItemOut:
-        return models.ItemOut(
-            **self.client._request("patch", f"/v1/items/{id}", data=data.dict())
-        )
+        return models.ItemOut(**self.client._request("patch", f"/v1/items/{id}", data=data.dict()))
 
     def create_item_attachment(
         self,
@@ -242,14 +228,10 @@ class ItemsClient:
         if name:
             data["name"] = name
         return models.ItemOut(
-            **self.client._request(
-                "post", f"/v1/items/{id}/attachments", data=data, files=files
-            )
+            **self.client._request("post", f"/v1/items/{id}/attachments", data=data, files=files)
         )
 
-    def get_item_attachment(
-        self, id: str, attachment_id: str
-    ) -> models.ItemAttachmentToken:
+    def get_item_attachment(self, id: str, attachment_id: str) -> models.ItemAttachmentToken:
         return models.ItemAttachmentToken(
             **self.client._request("get", f"/v1/items/{id}/attachments/{attachment_id}")
         )
@@ -268,9 +250,7 @@ class ItemsClient:
 
     def duplicate_item(self, id: str, data: models.DuplicateOptions) -> models.ItemOut:
         return models.ItemOut(
-            **self.client._request(
-                "post", f"/v1/items/{id}/duplicate", data=data.dict()
-            )
+            **self.client._request("post", f"/v1/items/{id}/duplicate", data=data.dict())
         )
 
     def get_maintenance_log(
@@ -281,24 +261,19 @@ class ItemsClient:
             params["status"] = status.value
         return [
             models.MaintenanceEntryWithDetails(**item)
-            for item in self.client._request(
-                "get", f"/v1/items/{id}/maintenance", params=params
-            )
+            for item in self.client._request("get", f"/v1/items/{id}/maintenance", params=params)
         ]
 
     def create_maintenance_entry(
         self, id: str, data: models.MaintenanceEntryCreate
     ) -> models.MaintenanceEntry:
         return models.MaintenanceEntry(
-            **self.client._request(
-                "post", f"/v1/items/{id}/maintenance", data=data.dict()
-            )
+            **self.client._request("post", f"/v1/items/{id}/maintenance", data=data.dict())
         )
 
     def get_item_path(self, id: str) -> list[models.ItemPath]:
         return [
-            models.ItemPath(**item)
-            for item in self.client._request("get", f"/v1/items/{id}/path")
+            models.ItemPath(**item) for item in self.client._request("get", f"/v1/items/{id}/path")
         ]
 
 
@@ -307,23 +282,16 @@ class LabelsClient:
         self.client = client
 
     def get_all_labels(self) -> list[models.LabelOut]:
-        return [
-            models.LabelOut(**item)
-            for item in self.client._request("get", "/v1/labels")
-        ]
+        return [models.LabelOut(**item) for item in self.client._request("get", "/v1/labels")]
 
     def create_label(self, data: models.LabelCreate) -> models.LabelSummary:
-        return models.LabelSummary(
-            **self.client._request("post", "/v1/labels", data=data.dict())
-        )
+        return models.LabelSummary(**self.client._request("post", "/v1/labels", data=data.dict()))
 
     def get_label(self, id: str) -> models.LabelOut:
         return models.LabelOut(**self.client._request("get", f"/v1/labels/{id}"))
 
     def update_label(self, id: str, data: models.LabelOut) -> models.LabelOut:
-        return models.LabelOut(
-            **self.client._request("put", f"/v1/labels/{id}", data=data.dict())
-        )
+        return models.LabelOut(**self.client._request("put", f"/v1/labels/{id}", data=data.dict()))
 
     def delete_label(self, id: str):
         self.client._request("delete", f"/v1/labels/{id}")
@@ -333,9 +301,7 @@ class LocationsClient:
     def __init__(self, client: HomeboxClient):
         self.client = client
 
-    def get_all_locations(
-        self, filterChildren: bool = None
-    ) -> list[models.LocationOutCount]:
+    def get_all_locations(self, filterChildren: bool = None) -> list[models.LocationOutCount]:
         params = {}
         if filterChildren:
             params["filterChildren"] = filterChildren
@@ -361,9 +327,7 @@ class LocationsClient:
     def get_location(self, id: str) -> models.LocationOut:
         return models.LocationOut(**self.client._request("get", f"/v1/locations/{id}"))
 
-    def update_location(
-        self, id: str, data: models.LocationUpdate
-    ) -> models.LocationOut:
+    def update_location(self, id: str, data: models.LocationUpdate) -> models.LocationOut:
         return models.LocationOut(
             **self.client._request("put", f"/v1/locations/{id}", data=data.dict())
         )
@@ -403,23 +367,16 @@ class NotifiersClient:
         self.client = client
 
     def get_notifiers(self) -> list[models.NotifierOut]:
-        return [
-            models.NotifierOut(**item)
-            for item in self.client._request("get", "/v1/notifiers")
-        ]
+        return [models.NotifierOut(**item) for item in self.client._request("get", "/v1/notifiers")]
 
     def create_notifier(self, data: models.NotifierCreate) -> models.NotifierOut:
-        return models.NotifierOut(
-            **self.client._request("post", "/v1/notifiers", data=data.dict())
-        )
+        return models.NotifierOut(**self.client._request("post", "/v1/notifiers", data=data.dict()))
 
     def test_notifier(self, url: str):
         params = {"url": url}
         self.client._request("post", "/v1/notifiers/test", params=params)
 
-    def update_notifier(
-        self, id: str, data: models.NotifierUpdate
-    ) -> models.NotifierOut:
+    def update_notifier(self, id: str, data: models.NotifierUpdate) -> models.NotifierOut:
         return models.NotifierOut(
             **self.client._request("put", f"/v1/notifiers/{id}", data=data.dict())
         )
@@ -484,9 +441,7 @@ class LabelMakerClient:
         params = {}
         if print:
             params["print"] = print
-        return self.client._request(
-            "get", f"/v1/labelmaker/location/{id}", params=params
-        )
+        return self.client._request("get", f"/v1/labelmaker/location/{id}", params=params)
 
 
 class ProductsClient:

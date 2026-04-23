@@ -1,6 +1,7 @@
 import pytest
-from homebox.client import HomeboxClient
+
 from homebox import models
+from homebox.client import HomeboxClient
 
 
 @pytest.fixture
@@ -27,16 +28,12 @@ def test_user_token_refresh(mocker, client: HomeboxClient):
 def test_register_new_user(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value=None)
     client.users.register_new_user(
-        models.UserRegistration(
-            name="test", email="test@example.com", password="password"
-        )
+        models.UserRegistration(name="test", email="test@example.com", password="password")
     )
 
 
 def test_get_user_self(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"item": {"id": "1", "name": "Test User"}}
-    )
+    mocker.patch.object(client, "_request", return_value={"item": {"id": "1", "name": "Test User"}})
     result = client.users.get_user_self()
     assert result.name == "Test User"
 

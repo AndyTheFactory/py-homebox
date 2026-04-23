@@ -1,9 +1,10 @@
 import os
+
 import pytest
+
 from homebox.client import HomeboxClient
 
 
-@pytest.mark.real
 @pytest.fixture
 def client():
     base_url = os.environ.get("HOMEBOX_URL")
