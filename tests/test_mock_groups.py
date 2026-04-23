@@ -1,6 +1,7 @@
 import pytest
-from homebox.client import HomeboxClient
+
 from homebox import models
+from homebox.client import HomeboxClient
 
 
 @pytest.fixture
@@ -9,17 +10,13 @@ def client():
 
 
 def test_get_group(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Group"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Group"})
     result = client.groups.get_group()
     assert result.name == "Test Group"
 
 
 def test_update_group(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Updated Group"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Updated Group"})
     result = client.groups.update_group(models.GroupUpdate(name="Updated Group"))
     assert result.name == "Updated Group"
 
@@ -57,8 +54,6 @@ def test_get_location_statistics(mocker, client: HomeboxClient):
 
 
 def test_get_purchase_price_statistics(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"valueAtStart": 100, "valueAtEnd": 200}
-    )
+    mocker.patch.object(client, "_request", return_value={"valueAtStart": 100, "valueAtEnd": 200})
     result = client.groups.get_purchase_price_statistics()
     assert result.valueAtStart == 100

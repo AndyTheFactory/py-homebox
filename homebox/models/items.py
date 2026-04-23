@@ -184,9 +184,7 @@ class ItemFieldEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    item: Optional[Item] = Field(
-        default=None, description="Item holds the value of the item edge."
-    )
+    item: Optional[Item] = Field(default=None, description="Item holds the value of the item edge.")
 
 
 class DuplicateOptions(BaseModel):

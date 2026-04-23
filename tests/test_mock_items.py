@@ -1,6 +1,7 @@
 import pytest
-from homebox.client import HomeboxClient
+
 from homebox import models
+from homebox.client import HomeboxClient
 
 
 @pytest.fixture
@@ -19,9 +20,7 @@ def test_query_all_items(mocker, client: HomeboxClient):
 
 
 def test_create_item(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Item"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
     result = client.items.create_item(models.ItemCreate(name="Test Item"))
     assert result.name == "Test Item"
 
@@ -50,17 +49,13 @@ def test_import_items(mocker, client: HomeboxClient):
 
 
 def test_get_item(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Item"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
     result = client.items.get_item("1")
     assert result.name == "Test Item"
 
 
 def test_update_item(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Updated Item"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Updated Item"})
     result = client.items.update_item("1", models.ItemUpdate(name="Updated Item"))
     assert result.name == "Updated Item"
 
@@ -71,17 +66,13 @@ def test_delete_item(mocker, client: HomeboxClient):
 
 
 def test_patch_item(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Patched Item"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Patched Item"})
     result = client.items.patch_item("1", models.ItemPatch(name="Patched Item"))
     assert result.name == "Patched Item"
 
 
 def test_create_item_attachment(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Item"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
     result = client.items.create_item_attachment("1", b"file_content", name="test.txt")
     assert result.name == "Test Item"
 
@@ -93,9 +84,7 @@ def test_get_item_attachment(mocker, client: HomeboxClient):
 
 
 def test_update_item_attachment(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Item"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
     result = client.items.update_item_attachment(
         "1", "1", models.ItemAttachmentUpdate(title="New Title")
     )
@@ -108,28 +97,20 @@ def test_delete_item_attachment(mocker, client: HomeboxClient):
 
 
 def test_duplicate_item(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "2", "name": "Test Item (copy)"}
-    )
-    result = client.items.duplicate_item(
-        "1", models.DuplicateOptions(copyPrefix=" (copy)")
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "2", "name": "Test Item (copy)"})
+    result = client.items.duplicate_item("1", models.DuplicateOptions(copyPrefix=" (copy)"))
     assert result.name == "Test Item (copy)"
 
 
 def test_get_maintenance_log(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value=[{"id": "1", "name": "Test Log"}]
-    )
+    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Log"}])
     result = client.items.get_maintenance_log("1")
     assert len(result) == 1
     assert result[0].name == "Test Log"
 
 
 def test_create_maintenance_entry(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Entry"}
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Entry"})
     result = client.items.create_maintenance_entry(
         "1", models.MaintenanceEntryCreate(name="Test Entry")
     )

@@ -51,5 +51,5 @@ class AttachmentEdges(BaseModel):
     )
 
 
-Attachment.model_rebuild()
-AttachmentEdges.model_rebuild()
+Attachment.model_rebuild(raise_errors=False)
+AttachmentEdges.model_rebuild(raise_errors=False)

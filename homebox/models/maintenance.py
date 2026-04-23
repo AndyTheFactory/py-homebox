@@ -56,7 +56,7 @@ class MaintenanceEntryWithDetails(BaseModel):
     scheduledDate: Optional[str] = None
 
 
-MaintenanceEntry.model_rebuild()
+MaintenanceEntry.model_rebuild(raise_errors=False)
 
 __all__ = [
     "MaintenanceEntry",

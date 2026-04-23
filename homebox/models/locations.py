@@ -116,7 +116,7 @@ class TreeItem(BaseModel):
     type: Optional[str] = None
 
 
-TreeItem.model_rebuild()
+TreeItem.model_rebuild(raise_errors=False)
 
 Location.model_rebuild(raise_errors=False)
 

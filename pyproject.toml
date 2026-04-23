@@ -10,19 +10,23 @@ description = "A Python wrapper for the Homebox API"
 authors = [{ name = "Andrei Paraschiv", email = "andrei@thephpfactory.com" }]
 license = { file = "LICENSE" }
 readme = "README.md"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "requests",
     "pydantic",
 ]
+
 [dependency-groups]
-dev= [
+dev = [
   "pytest >=8.0.0",
   "pytest-cov >=6.0.0",
   "pytest-mock >=3.15.1",
@@ -33,9 +37,80 @@ dev= [
   "codespell >=2.4.0",
   "ty >=0.0.1a26",
 ]
+
 [project.urls]
 "Homepage" = "https://github.com/AndyTheFactory/py-homebox"
 "Bug Tracker" = "https://github.com/AndyTheFactory/py-homebox/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["homebox"]
+
+# ---------------------------------------------------------------------------
+# Ruff – formatting and linting (includes pydocstyle D-rules for docstrings)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "D"]
+# Don't require a docstring on every individual method/function – only
+# module-level and public-class-level coverage is enforced for now.
+ignore = [
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D103",  # Missing docstring in public function
+    "D105",  # Missing docstring in magic method
+    "D107",  # Missing docstring in __init__
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Generated model files – suppress style, pyflakes and docstring rules
+"homebox/models/*.py" = ["E", "F", "W", "D"]
+"tests/*.py" = ["D"]  # Test files don't need docstrings
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# ---------------------------------------------------------------------------
+# Pylint
+# ---------------------------------------------------------------------------
+[tool.pylint.main]
+# Exclude auto-generated model files from pylint analysis
+ignore-paths = ["homebox/models"]
+
+[tool.pylint."messages control"]
+disable = [
+    "C0103",  # naming-convention – camelCase params required by the Homebox API
+    "C0114",  # missing-module-docstring – checked by ruff (D100)
+    "C0115",  # missing-class-docstring – checked by ruff (D101)
+    "C0116",  # missing-function-docstring – checked by ruff (D102/D103)
+    "W0212",  # protected-access – sub-clients intentionally call parent._request
+    "W0622",  # redefined-builtin – API params (id, type, print) shadow builtins
+]
+
+# ---------------------------------------------------------------------------
+# Codespell – spell checking
+# ---------------------------------------------------------------------------
+[tool.codespell]
+# Skip generated JSON schema, lock files, and auto-generated model files
+skip = "*.json,*.lock,./homebox/models"
+count = true
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["homebox"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+]

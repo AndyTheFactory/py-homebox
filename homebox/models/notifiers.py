@@ -44,9 +44,7 @@ class NotifierEdges(BaseModel):
     group: Optional[Group] = Field(
         default=None, description="Group holds the value of the group edge."
     )
-    user: Optional[User] = Field(
-        default=None, description="User holds the value of the user edge."
-    )
+    user: Optional[User] = Field(default=None, description="User holds the value of the user edge.")
 
 
 class NotifierCreate(BaseModel):
