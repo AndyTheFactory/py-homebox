@@ -70,7 +70,7 @@ class LabelOut(BaseModel):
 
 LabelSummary = LabelOut
 
-Label.model_rebuild()
+Label.model_rebuild(raise_errors=False)
 
 __all__ = [
     "LabelCreate",

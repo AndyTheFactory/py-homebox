@@ -7,9 +7,10 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from typing import Any
+
 from homebox.models.types import ItemType
 
-from . import ent
 from .labels import LabelSummary
 from .locations import LocationSummary
 
@@ -208,7 +209,7 @@ class ItemAttachment(BaseModel):
     mimeType: Optional[str] = None
     path: Optional[str] = None
     primary: Optional[bool] = None
-    thumbnail: Optional[ent.Attachment] = None
+    thumbnail: Optional[Any] = None
     title: Optional[str] = None
     type: Optional[str] = None
     updatedAt: Optional[str] = None
@@ -366,9 +367,9 @@ class PaginationResultRepoItemSummary(BaseModel):
     total: Optional[int] = None
 
 
-Item.model_rebuild()
-ItemEdges.model_rebuild()
-ItemField.model_rebuild()
+Item.model_rebuild(raise_errors=False)
+ItemEdges.model_rebuild(raise_errors=False)
+ItemField.model_rebuild(raise_errors=False)
 
 __all__ = [
     "DuplicateOptions",

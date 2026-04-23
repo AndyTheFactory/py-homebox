@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class User(BaseModel):
@@ -81,7 +81,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
 
 
-User.model_rebuild()
+User.model_rebuild(raise_errors=False)
 
 
 __all__ = [
