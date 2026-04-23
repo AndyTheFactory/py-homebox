@@ -81,8 +81,8 @@ class NotifierUpdate(BaseModel):
     url: Optional[str] = None
 
 
-Notifier.model_rebuild()
-NotifierEdges.model_rebuild()
+Notifier.model_rebuild(raise_errors=False)
+NotifierEdges.model_rebuild(raise_errors=False)
 
 __all__ = [
     "NotifierCreate",

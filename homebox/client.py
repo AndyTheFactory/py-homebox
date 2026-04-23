@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 import requests
@@ -9,7 +10,13 @@ from homebox.models import types
 
 
 class HomeboxClient:
-    def __init__(self, base_url: str, token: Optional[str] = None):
+    def __init__(self, base_url: Optional[str] = None, token: Optional[str] = None):
+        base_url = base_url or os.environ.get("HOMEBOX_URL")
+        if not base_url:
+            raise ValueError(
+                "base_url must be provided or the HOMEBOX_URL environment variable must be set"
+            )
+        token = token or os.environ.get("HOMEBOX_TOKEN")
         self.base_url = base_url
         self.token = token
         self.headers = {"Content-Type": "application/json"}
