@@ -43,7 +43,9 @@ class AttachmentEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    item: Optional[Any] = Field(default=None, description="Item holds the value of the item edge.")
+    item: Optional[Any] = Field(
+        default=None, description="Item holds the value of the item edge."
+    )
     thumbnail: Optional[Attachment] = Field(
         default=None, description="Thumbnail holds the value of the thumbnail edge."
     )

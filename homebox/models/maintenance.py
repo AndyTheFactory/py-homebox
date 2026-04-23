@@ -7,8 +7,6 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .items import ItemFieldEdges
-
 
 class MaintenanceEntry(BaseModel):
     model_config = ConfigDict(
