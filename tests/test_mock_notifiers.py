@@ -18,9 +18,7 @@ def test_get_notifiers(mocker, client: HomeboxClient):
 
 def test_create_notifier(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Notifier"})
-    result = client.notifiers.create_notifier(
-        models.NotifierCreate(name="Test Notifier", url="http://localhost")
-    )
+    result = client.notifiers.create_notifier(models.NotifierCreate(name="Test Notifier", url="http://localhost"))
     assert result.name == "Test Notifier"
 
 

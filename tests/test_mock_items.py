@@ -85,9 +85,7 @@ def test_get_item_attachment(mocker, client: HomeboxClient):
 
 def test_update_item_attachment(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
-    result = client.items.update_item_attachment(
-        "1", "1", models.ItemAttachmentUpdate(title="New Title")
-    )
+    result = client.items.update_item_attachment("1", "1", models.ItemAttachmentUpdate(title="New Title"))
     assert result.name == "Test Item"
 
 
@@ -111,9 +109,7 @@ def test_get_maintenance_log(mocker, client: HomeboxClient):
 
 def test_create_maintenance_entry(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Entry"})
-    result = client.items.create_maintenance_entry(
-        "1", models.MaintenanceEntryCreate(name="Test Entry")
-    )
+    result = client.items.create_maintenance_entry("1", models.MaintenanceEntryCreate(name="Test Entry"))
     assert result.name == "Test Entry"
 
 

@@ -7,14 +7,15 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from homebox.models import Group
+from homebox.models.group import Item
+
 
 class Location(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
+    created_at: Optional[str] = Field(default=None, description='CreatedAt holds the value of the "created_at" field.')
     description: Optional[str] = Field(
         default=None,
         description='Description holds the value of the "description" field.',
@@ -24,30 +25,18 @@ class Location(BaseModel):
         description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the LocationQuery when eager-loading is set.",
     )
     id: Optional[str] = Field(default=None, description="ID of the ent.")
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
+    name: Optional[str] = Field(default=None, description='Name holds the value of the "name" field.')
+    updated_at: Optional[str] = Field(default=None, description='UpdatedAt holds the value of the "updated_at" field.')
 
 
 class LocationEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    children: Optional[List[Location]] = Field(
-        default=None, description="Children holds the value of the children edge."
-    )
-    group: Optional[Group] = Field(
-        default=None, description="Group holds the value of the group edge."
-    )
-    items: Optional[List[Item]] = Field(
-        default=None, description="Items holds the value of the items edge."
-    )
-    parent: Optional[Location] = Field(
-        default=None, description="Parent holds the value of the parent edge."
-    )
+    children: list[Location] | None = Field(default=None, description="Children holds the value of the children edge.")
+    group: Group | None = Field(default=None, description="Group holds the value of the group edge.")
+    items: list[Item] | None = Field(default=None, description="Items holds the value of the items edge.")
+    parent: Location | None = Field(default=None, description="Parent holds the value of the parent edge.")
 
 
 class LocationCreate(BaseModel):

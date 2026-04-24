@@ -7,6 +7,11 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from homebox.models import Group
+from homebox.models.auth import AuthTokens
+from homebox.models.notifiers import Notifier
+from homebox.models.types import UserRole
+
 
 class User(BaseModel):
     model_config = ConfigDict(
@@ -16,46 +21,33 @@ class User(BaseModel):
         default=None,
         description='ActivatedOn holds the value of the "activated_on" field.',
     )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
+    created_at: Optional[str] = Field(default=None, description='CreatedAt holds the value of the "created_at" field.')
     edges: Optional[UserEdges] = Field(
         default=None,
-        description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the UserQuery when eager-loading is set.",
+        description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by "
+        "the UserQuery when eager-loading is set.",
     )
-    email: Optional[str] = Field(
-        default=None, description='Email holds the value of the "email" field.'
-    )
+    email: Optional[str] = Field(default=None, description='Email holds the value of the "email" field.')
     id: Optional[str] = Field(default=None, description="ID of the ent.")
     is_superuser: Optional[bool] = Field(
         default=None,
         description='IsSuperuser holds the value of the "is_superuser" field.',
     )
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
-    role: Optional[types.UserRole] = Field(
-        default=None, description='Role holds the value of the "role" field.'
-    )
-    superuser: Optional[bool] = Field(
-        default=None, description='Superuser holds the value of the "superuser" field.'
-    )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
+    name: Optional[str] = Field(default=None, description='Name holds the value of the "name" field.')
+    role: Optional[UserRole] = Field(default=None, description='Role holds the value of the "role" field.')
+    superuser: Optional[bool] = Field(default=None, description='Superuser holds the value of the "superuser" field.')
+    updated_at: Optional[str] = Field(default=None, description='UpdatedAt holds the value of the "updated_at" field.')
 
 
 class UserEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    auth_tokens: Optional[List[AuthTokens]] = Field(
+    auth_tokens: Optional[list[AuthTokens]] = Field(
         default=None, description="AuthTokens holds the value of the auth_tokens edge."
     )
-    group: Optional[Group] = Field(
-        default=None, description="Group holds the value of the group edge."
-    )
-    notifiers: Optional[List[Notifier]] = Field(
+    group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
+    notifiers: Optional[list[Notifier]] = Field(
         default=None, description="Notifiers holds the value of the notifiers edge."
     )
 

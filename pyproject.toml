@@ -49,7 +49,7 @@ packages = ["homebox"]
 # Ruff – formatting and linting (includes pydocstyle D-rules for docstrings)
 # ---------------------------------------------------------------------------
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.format]
@@ -92,6 +92,9 @@ disable = [
     "W0212",  # protected-access – sub-clients intentionally call parent._request
     "W0622",  # redefined-builtin – API params (id, type, print) shadow builtins
 ]
+
+[tool.pylint.format]
+max-line-length = 120
 
 # ---------------------------------------------------------------------------
 # Codespell – spell checking

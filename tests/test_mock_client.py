@@ -1,12 +1,13 @@
 """Tests for HomeboxClient core, optional parameters, error handling, and edge cases."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 import requests
-from unittest.mock import MagicMock, patch
-from homebox.client import HomeboxClient
-from homebox import models
-from homebox.models.types import MaintenanceFilterStatus
 
+from homebox import models
+from homebox.client import HomeboxClient
+from homebox.models.types import MaintenanceFilterStatus
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -206,30 +207,20 @@ def test_query_all_items_empty_result(mocker, client):
 
 
 def test_create_item_attachment_with_type_and_primary(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value={"id": "1", "name": "Test Item"}
-    )
-    result = client.items.create_item_attachment(
-        "1", b"file", type="photo", primary=True, name="photo.jpg"
-    )
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
+    result = client.items.create_item_attachment("1", b"file", type="photo", primary=True, name="photo.jpg")
     assert result.id == "1"
 
 
 def test_get_maintenance_log_with_status(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value=[{"id": "1", "name": "Scheduled Entry"}]
-    )
-    result = client.items.get_maintenance_log(
-        "1", status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled
-    )
+    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Scheduled Entry"}])
+    result = client.items.get_maintenance_log("1", status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled)
     assert len(result) == 1
 
 
 def test_get_maintenance_log_completed_status(mocker, client):
     mocker.patch.object(client, "_request", return_value=[])
-    result = client.items.get_maintenance_log(
-        "1", status=MaintenanceFilterStatus.MaintenanceFilterStatusCompleted
-    )
+    result = client.items.get_maintenance_log("1", status=MaintenanceFilterStatus.MaintenanceFilterStatusCompleted)
     assert result == []
 
 
@@ -242,9 +233,7 @@ def test_get_maintenance_log_both_status(mocker, client):
             {"id": "2", "name": "Entry2"},
         ],
     )
-    result = client.items.get_maintenance_log(
-        "1", status=MaintenanceFilterStatus.MaintenanceFilterStatusBoth
-    )
+    result = client.items.get_maintenance_log("1", status=MaintenanceFilterStatus.MaintenanceFilterStatusBoth)
     assert len(result) == 2
 
 
@@ -281,28 +270,20 @@ def test_get_item_path_multiple(mocker, client):
 
 
 def test_get_purchase_price_statistics_with_start(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value={"valueAtStart": 50, "valueAtEnd": 100}
-    )
+    mocker.patch.object(client, "_request", return_value={"valueAtStart": 50, "valueAtEnd": 100})
     result = client.groups.get_purchase_price_statistics(start="2024-01-01")
     assert result.valueAtStart == 50
 
 
 def test_get_purchase_price_statistics_with_end(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value={"valueAtStart": 50, "valueAtEnd": 200}
-    )
+    mocker.patch.object(client, "_request", return_value={"valueAtStart": 50, "valueAtEnd": 200})
     result = client.groups.get_purchase_price_statistics(end="2024-12-31")
     assert result.valueAtEnd == 200
 
 
 def test_get_purchase_price_statistics_with_both(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value={"valueAtStart": 50, "valueAtEnd": 200}
-    )
-    result = client.groups.get_purchase_price_statistics(
-        start="2024-01-01", end="2024-12-31"
-    )
+    mocker.patch.object(client, "_request", return_value={"valueAtStart": 50, "valueAtEnd": 200})
+    result = client.groups.get_purchase_price_statistics(start="2024-01-01", end="2024-12-31")
     assert result.valueAtStart == 50
     assert result.valueAtEnd == 200
 
@@ -325,9 +306,7 @@ def test_get_location_statistics_empty(mocker, client):
 
 
 def test_get_all_locations_with_filter_children(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value=[{"id": "1", "name": "Root Location"}]
-    )
+    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Root Location"}])
     result = client.locations.get_all_locations(filterChildren=True)
     assert len(result) == 1
 
@@ -339,9 +318,7 @@ def test_get_all_locations_empty(mocker, client):
 
 
 def test_get_locations_tree_with_items(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value=[{"id": "1", "name": "Tree Node"}]
-    )
+    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Tree Node"}])
     result = client.locations.get_locations_tree(withItems=True)
     assert len(result) == 1
 
@@ -358,22 +335,14 @@ def test_get_locations_tree_empty(mocker, client):
 
 
 def test_query_all_maintenance_with_status(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value=[{"id": "1", "name": "Scheduled"}]
-    )
-    result = client.maintenance.query_all_maintenance(
-        status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled
-    )
+    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Scheduled"}])
+    result = client.maintenance.query_all_maintenance(status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled)
     assert len(result) == 1
 
 
 def test_query_all_maintenance_completed(mocker, client):
-    mocker.patch.object(
-        client, "_request", return_value=[{"id": "2", "name": "Done"}]
-    )
-    result = client.maintenance.query_all_maintenance(
-        status=MaintenanceFilterStatus.MaintenanceFilterStatusCompleted
-    )
+    mocker.patch.object(client, "_request", return_value=[{"id": "2", "name": "Done"}])
+    result = client.maintenance.query_all_maintenance(status=MaintenanceFilterStatus.MaintenanceFilterStatusCompleted)
     assert result[0].name == "Done"
 
 
@@ -475,6 +444,8 @@ def test_get_item_by_asset_id_with_items(mocker, client):
     assert result.total == 1
     assert len(result.items) == 1
     assert result.items[0].name == "Found Item"
+
+
 def test_init_base_url_from_env(monkeypatch):
     monkeypatch.setenv("HOMEBOX_URL", "http://env-host:8080")
     monkeypatch.delenv("HOMEBOX_TOKEN", raising=False)

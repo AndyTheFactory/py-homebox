@@ -7,26 +7,21 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models.types import ItemType
+from homebox.models import Group, MaintenanceEntry
+from homebox.models.types import ItemFieldType, ItemType
 
 from .attachment import Attachment
-from .labels import LabelSummary
-from .locations import LocationSummary
+from .labels import Label, LabelSummary
+from .locations import Location, LocationSummary
 
 
 class Item(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    archived: Optional[bool] = Field(
-        default=None, description='Archived holds the value of the "archived" field.'
-    )
-    asset_id: Optional[int] = Field(
-        default=None, description='AssetID holds the value of the "asset_id" field.'
-    )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
+    archived: Optional[bool] = Field(default=None, description='Archived holds the value of the "archived" field.')
+    asset_id: Optional[int] = Field(default=None, description='AssetID holds the value of the "asset_id" field.')
+    created_at: Optional[str] = Field(default=None, description='CreatedAt holds the value of the "created_at" field.')
     description: Optional[str] = Field(
         default=None,
         description='Description holds the value of the "description" field.',
@@ -36,12 +31,8 @@ class Item(BaseModel):
         description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ItemQuery when eager-loading is set.",
     )
     id: Optional[str] = Field(default=None, description="ID of the ent.")
-    import_ref: Optional[str] = Field(
-        default=None, description='ImportRef holds the value of the "import_ref" field.'
-    )
-    insured: Optional[bool] = Field(
-        default=None, description='Insured holds the value of the "insured" field.'
-    )
+    import_ref: Optional[str] = Field(default=None, description='ImportRef holds the value of the "import_ref" field.')
+    insured: Optional[bool] = Field(default=None, description='Insured holds the value of the "insured" field.')
     lifetime_warranty: Optional[bool] = Field(
         default=None,
         description='LifetimeWarranty holds the value of the "lifetime_warranty" field.',
@@ -54,12 +45,8 @@ class Item(BaseModel):
         default=None,
         description='ModelNumber holds the value of the "model_number" field.',
     )
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
-    notes: Optional[str] = Field(
-        default=None, description='Notes holds the value of the "notes" field.'
-    )
+    name: Optional[str] = Field(default=None, description='Name holds the value of the "name" field.')
+    notes: Optional[str] = Field(default=None, description='Notes holds the value of the "notes" field.')
     purchase_from: Optional[str] = Field(
         default=None,
         description='PurchaseFrom holds the value of the "purchase_from" field.',
@@ -72,32 +59,22 @@ class Item(BaseModel):
         default=None,
         description='PurchaseTime holds the value of the "purchase_time" field.',
     )
-    quantity: Optional[int] = Field(
-        default=None, description='Quantity holds the value of the "quantity" field.'
-    )
+    quantity: Optional[int] = Field(default=None, description='Quantity holds the value of the "quantity" field.')
     serial_number: Optional[str] = Field(
         default=None,
         description='SerialNumber holds the value of the "serial_number" field.',
     )
-    sold_notes: Optional[str] = Field(
-        default=None, description='SoldNotes holds the value of the "sold_notes" field.'
-    )
+    sold_notes: Optional[str] = Field(default=None, description='SoldNotes holds the value of the "sold_notes" field.')
     sold_price: Optional[float] = Field(
         default=None, description='SoldPrice holds the value of the "sold_price" field.'
     )
-    sold_time: Optional[str] = Field(
-        default=None, description='SoldTime holds the value of the "sold_time" field.'
-    )
-    sold_to: Optional[str] = Field(
-        default=None, description='SoldTo holds the value of the "sold_to" field.'
-    )
+    sold_time: Optional[str] = Field(default=None, description='SoldTime holds the value of the "sold_time" field.')
+    sold_to: Optional[str] = Field(default=None, description='SoldTo holds the value of the "sold_to" field.')
     sync_child_items_locations: Optional[bool] = Field(
         default=None,
         description='SyncChildItemsLocations holds the value of the "sync_child_items_locations" field.',
     )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
+    updated_at: Optional[str] = Field(default=None, description='UpdatedAt holds the value of the "updated_at" field.')
     warranty_details: Optional[str] = Field(
         default=None,
         description='WarrantyDetails holds the value of the "warranty_details" field.',
@@ -115,28 +92,16 @@ class ItemEdges(BaseModel):
     attachments: Optional[List[Attachment]] = Field(
         default=None, description="Attachments holds the value of the attachments edge."
     )
-    children: Optional[List[Item]] = Field(
-        default=None, description="Children holds the value of the children edge."
-    )
-    fields: Optional[List[ItemField]] = Field(
-        default=None, description="Fields holds the value of the fields edge."
-    )
-    group: Optional[Group] = Field(
-        default=None, description="Group holds the value of the group edge."
-    )
-    label: Optional[List[Label]] = Field(
-        default=None, description="Label holds the value of the label edge."
-    )
-    location: Optional[Location] = Field(
-        default=None, description="Location holds the value of the location edge."
-    )
+    children: Optional[List[Item]] = Field(default=None, description="Children holds the value of the children edge.")
+    fields: Optional[List[ItemField]] = Field(default=None, description="Fields holds the value of the fields edge.")
+    group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
+    label: Optional[List[Label]] = Field(default=None, description="Label holds the value of the label edge.")
+    location: Optional[Location] = Field(default=None, description="Location holds the value of the location edge.")
     maintenance_entries: Optional[List[MaintenanceEntry]] = Field(
         default=None,
         description="MaintenanceEntries holds the value of the maintenance_entries edge.",
     )
-    parent: Optional[Item] = Field(
-        default=None, description="Parent holds the value of the parent edge."
-    )
+    parent: Optional[Item] = Field(default=None, description="Parent holds the value of the parent edge.")
 
 
 class ItemField(BaseModel):
@@ -147,9 +112,7 @@ class ItemField(BaseModel):
         default=None,
         description='BooleanValue holds the value of the "boolean_value" field.',
     )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
+    created_at: Optional[str] = Field(default=None, description='CreatedAt holds the value of the "created_at" field.')
     description: Optional[str] = Field(
         default=None,
         description='Description holds the value of the "description" field.',
@@ -159,25 +122,15 @@ class ItemField(BaseModel):
         description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ItemFieldQuery when eager-loading is set.",
     )
     id: Optional[str] = Field(default=None, description="ID of the ent.")
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
+    name: Optional[str] = Field(default=None, description='Name holds the value of the "name" field.')
     number_value: Optional[int] = Field(
         default=None,
         description='NumberValue holds the value of the "number_value" field.',
     )
-    text_value: Optional[str] = Field(
-        default=None, description='TextValue holds the value of the "text_value" field.'
-    )
-    time_value: Optional[str] = Field(
-        default=None, description='TimeValue holds the value of the "time_value" field.'
-    )
-    type: Optional[types.ItemFieldType] = Field(
-        default=None, description='Type holds the value of the "type" field.'
-    )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
+    text_value: Optional[str] = Field(default=None, description='TextValue holds the value of the "text_value" field.')
+    time_value: Optional[str] = Field(default=None, description='TimeValue holds the value of the "time_value" field.')
+    type: Optional[ItemFieldType] = Field(default=None, description='Type holds the value of the "type" field.')
+    updated_at: Optional[str] = Field(default=None, description='UpdatedAt holds the value of the "updated_at" field.')
 
 
 class ItemFieldEdges(BaseModel):

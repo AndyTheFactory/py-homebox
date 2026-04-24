@@ -27,9 +27,7 @@ def test_user_token_refresh(mocker, client: HomeboxClient):
 
 def test_register_new_user(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value=None)
-    client.users.register_new_user(
-        models.UserRegistration(name="test", email="test@example.com", password="password")
-    )
+    client.users.register_new_user(models.UserRegistration(name="test", email="test@example.com", password="password"))
 
 
 def test_get_user_self(mocker, client: HomeboxClient):
@@ -39,9 +37,7 @@ def test_get_user_self(mocker, client: HomeboxClient):
 
 
 def test_update_account(mocker, client: HomeboxClient):
-    mocker.patch.object(
-        client, "_request", return_value={"item": {"id": "1", "name": "Updated User"}}
-    )
+    mocker.patch.object(client, "_request", return_value={"item": {"id": "1", "name": "Updated User"}})
     result = client.users.update_account(models.UserUpdate(name="Updated User"))
     assert result.name == "Updated User"
 

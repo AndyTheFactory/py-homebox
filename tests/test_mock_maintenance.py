@@ -18,9 +18,7 @@ def test_query_all_maintenance(mocker, client: HomeboxClient):
 
 def test_update_maintenance_entry(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Updated Maintenance"})
-    result = client.maintenance.update_maintenance_entry(
-        "1", models.MaintenanceEntryUpdate(name="Updated Maintenance")
-    )
+    result = client.maintenance.update_maintenance_entry("1", models.MaintenanceEntryUpdate(name="Updated Maintenance"))
     assert result.name == "Updated Maintenance"
 
 

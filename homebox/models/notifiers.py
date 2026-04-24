@@ -7,43 +7,32 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from homebox.models import Group
+from homebox.models.users import User
+
 
 class Notifier(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
+    created_at: Optional[str] = Field(default=None, description='CreatedAt holds the value of the "created_at" field.')
     edges: Optional[NotifierEdges] = Field(
         default=None,
         description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the NotifierQuery when eager-loading is set.",
     )
-    group_id: Optional[str] = Field(
-        default=None, description='GroupID holds the value of the "group_id" field.'
-    )
+    group_id: Optional[str] = Field(default=None, description='GroupID holds the value of the "group_id" field.')
     id: Optional[str] = Field(default=None, description="ID of the ent.")
-    is_active: Optional[bool] = Field(
-        default=None, description='IsActive holds the value of the "is_active" field.'
-    )
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
-    user_id: Optional[str] = Field(
-        default=None, description='UserID holds the value of the "user_id" field.'
-    )
+    is_active: Optional[bool] = Field(default=None, description='IsActive holds the value of the "is_active" field.')
+    name: Optional[str] = Field(default=None, description='Name holds the value of the "name" field.')
+    updated_at: Optional[str] = Field(default=None, description='UpdatedAt holds the value of the "updated_at" field.')
+    user_id: Optional[str] = Field(default=None, description='UserID holds the value of the "user_id" field.')
 
 
 class NotifierEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    group: Optional[Group] = Field(
-        default=None, description="Group holds the value of the group edge."
-    )
+    group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
     user: Optional[User] = Field(default=None, description="User holds the value of the user edge.")
 
 

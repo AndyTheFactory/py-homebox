@@ -7,17 +7,16 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from homebox.models import Group
+from homebox.models.group import Item
+
 
 class Label(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    color: Optional[str] = Field(
-        default=None, description='Color holds the value of the "color" field.'
-    )
-    created_at: Optional[str] = Field(
-        default=None, description='CreatedAt holds the value of the "created_at" field.'
-    )
+    color: Optional[str] = Field(default=None, description='Color holds the value of the "color" field.')
+    created_at: Optional[str] = Field(default=None, description='CreatedAt holds the value of the "created_at" field.')
     description: Optional[str] = Field(
         default=None,
         description='Description holds the value of the "description" field.',
@@ -27,24 +26,16 @@ class Label(BaseModel):
         description="Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the LabelQuery when eager-loading is set.",
     )
     id: Optional[str] = Field(default=None, description="ID of the ent.")
-    name: Optional[str] = Field(
-        default=None, description='Name holds the value of the "name" field.'
-    )
-    updated_at: Optional[str] = Field(
-        default=None, description='UpdatedAt holds the value of the "updated_at" field.'
-    )
+    name: Optional[str] = Field(default=None, description='Name holds the value of the "name" field.')
+    updated_at: Optional[str] = Field(default=None, description='UpdatedAt holds the value of the "updated_at" field.')
 
 
 class LabelEdges(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    group: Optional[Group] = Field(
-        default=None, description="Group holds the value of the group edge."
-    )
-    items: Optional[List[Item]] = Field(
-        default=None, description="Items holds the value of the items edge."
-    )
+    group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
+    items: list[Item] | None = Field(default=None, description="Items holds the value of the items edge.")
 
 
 class LabelCreate(BaseModel):
