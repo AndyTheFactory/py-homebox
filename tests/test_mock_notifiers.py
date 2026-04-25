@@ -10,7 +10,7 @@ def client():
 
 
 def test_get_notifiers(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Notifier"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Notifier"}]})
     result = client.notifiers.get_notifiers()
     assert len(result) == 1
     assert result[0].name == "Test Notifier"

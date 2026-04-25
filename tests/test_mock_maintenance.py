@@ -10,7 +10,7 @@ def client():
 
 
 def test_query_all_maintenance(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Maintenance"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Maintenance"}]})
     result = client.maintenance.query_all_maintenance()
     assert len(result) == 1
     assert result[0].name == "Test Maintenance"

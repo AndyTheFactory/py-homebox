@@ -1,7 +1,7 @@
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ['hatchling', 'hatch-fancy-pypi-readme>=22.5.0']
+build-backend = 'hatchling.build'
 
 [project]
 name = "homebox"
@@ -42,8 +42,6 @@ dev = [
 "Homepage" = "https://github.com/AndyTheFactory/py-homebox"
 "Bug Tracker" = "https://github.com/AndyTheFactory/py-homebox/issues"
 
-[tool.hatch.build.targets.wheel]
-packages = ["homebox"]
 
 # ---------------------------------------------------------------------------
 # Ruff – formatting and linting (includes pydocstyle D-rules for docstrings)
@@ -116,4 +114,30 @@ exclude_lines = [
     "pragma: no cover",
     "def __repr__",
     "if TYPE_CHECKING:",
+]
+
+[tool.hatch.version]
+path = "homebox/__init__.py"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["homebox"]
+
+[tool.hatch.build.targets.sdist]
+# limit which files are included in the sdist (.tar.gz) asset,
+include = [
+    '/README.md',
+    '/CHANGELOG.md',
+    '/LICENSE',
+    '/homebox',
+]
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = 'text/markdown'
+# construct the PyPI readme from README.md and CHANGELOG.md
+fragments = [
+    {path = 'README.md'},
+    {text = "\n## Changelog\n\n"},
+    {path = 'CHANGELOG.md', pattern = '(.+?)<!-- package description limit -->'},
+    {text = "\n... see [here](https://github.com/AndyTheFactory/py-homebox/blob/master/CHANGELOG.md) for earlier changes.\n"},
 ]

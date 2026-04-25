@@ -236,13 +236,13 @@ def test_create_item_attachment_passes_named_file(mocker, client):
 
 
 def test_get_maintenance_log_with_status(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Scheduled Entry"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Scheduled Entry"}]})
     result = client.items.get_maintenance_log("1", status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled)
     assert len(result) == 1
 
 
 def test_get_maintenance_log_completed_status(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.items.get_maintenance_log("1", status=MaintenanceFilterStatus.MaintenanceFilterStatusCompleted)
     assert result == []
 
@@ -251,23 +251,25 @@ def test_get_maintenance_log_both_status(mocker, client):
     mocker.patch.object(
         client,
         "_request",
-        return_value=[
-            {"id": "1", "name": "Entry1"},
-            {"id": "2", "name": "Entry2"},
-        ],
+        return_value={
+            "data": [
+                {"id": "1", "name": "Entry1"},
+                {"id": "2", "name": "Entry2"},
+            ]
+        },
     )
     result = client.items.get_maintenance_log("1", status=MaintenanceFilterStatus.MaintenanceFilterStatusBoth)
     assert len(result) == 2
 
 
 def test_get_maintenance_log_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.items.get_maintenance_log("1")
     assert result == []
 
 
 def test_get_item_path_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.items.get_item_path("1")
     assert result == []
 
@@ -276,10 +278,12 @@ def test_get_item_path_multiple(mocker, client):
     mocker.patch.object(
         client,
         "_request",
-        return_value=[
-            {"id": "10", "name": "Parent", "type": "location"},
-            {"id": "1", "name": "Item", "type": "item"},
-        ],
+        return_value={
+            "data": [
+                {"id": "10", "name": "Parent", "type": "location"},
+                {"id": "1", "name": "Item", "type": "item"},
+            ]
+        },
     )
     result = client.items.get_item_path("1")
     assert len(result) == 2
@@ -312,13 +316,13 @@ def test_get_purchase_price_statistics_with_both(mocker, client):
 
 
 def test_get_label_statistics_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.groups.get_label_statistics()
     assert result == []
 
 
 def test_get_location_statistics_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.groups.get_location_statistics()
     assert result == []
 
@@ -329,25 +333,25 @@ def test_get_location_statistics_empty(mocker, client):
 
 
 def test_get_all_locations_with_filter_children(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Root Location"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Root Location"}]})
     result = client.locations.get_all_locations(filterChildren=True)
     assert len(result) == 1
 
 
 def test_get_all_locations_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.locations.get_all_locations()
     assert result == []
 
 
 def test_get_locations_tree_with_items(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Tree Node"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Tree Node"}]})
     result = client.locations.get_locations_tree(withItems=True)
     assert len(result) == 1
 
 
 def test_get_locations_tree_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.locations.get_locations_tree()
     assert result == []
 
@@ -358,19 +362,19 @@ def test_get_locations_tree_empty(mocker, client):
 
 
 def test_query_all_maintenance_with_status(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Scheduled"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Scheduled"}]})
     result = client.maintenance.query_all_maintenance(status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled)
     assert len(result) == 1
 
 
 def test_query_all_maintenance_completed(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[{"id": "2", "name": "Done"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "2", "name": "Done"}]})
     result = client.maintenance.query_all_maintenance(status=MaintenanceFilterStatus.MaintenanceFilterStatusCompleted)
     assert result[0].name == "Done"
 
 
 def test_query_all_maintenance_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.maintenance.query_all_maintenance()
     assert result == []
 
@@ -404,7 +408,7 @@ def test_get_location_label_with_print(mocker, client):
 
 
 def test_search_ean_from_barcode_no_data(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.products.search_ean_from_barcode()
     assert result == []
 
@@ -419,7 +423,7 @@ def test_search_ean_from_barcode_multiple(mocker, client):
     mocker.patch.object(
         client,
         "_request",
-        return_value=[{"barcode": "123"}, {"barcode": "456"}],
+        return_value={"data": [{"barcode": "123"}, {"barcode": "456"}]},
     )
     result = client.products.search_ean_from_barcode("123")
     assert len(result) == 2
@@ -431,7 +435,7 @@ def test_search_ean_from_barcode_multiple(mocker, client):
 
 
 def test_get_notifiers_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.notifiers.get_notifiers()
     assert result == []
 
@@ -442,7 +446,7 @@ def test_get_notifiers_empty(mocker, client):
 
 
 def test_get_all_labels_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value=[])
+    mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.labels.get_all_labels()
     assert result == []
 

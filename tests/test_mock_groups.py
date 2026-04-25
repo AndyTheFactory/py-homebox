@@ -34,7 +34,7 @@ def test_get_group_statistics(mocker, client: HomeboxClient):
 
 
 def test_get_label_statistics(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Label", "total": 5}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Label", "total": 5}]})
     result = client.groups.get_label_statistics()
     assert len(result) == 1
     assert result[0].name == "Test Label"
@@ -44,7 +44,7 @@ def test_get_location_statistics(mocker, client: HomeboxClient):
     mocker.patch.object(
         client,
         "_request",
-        return_value=[{"id": "1", "name": "Test Location", "total": 5}],
+        return_value={"data": [{"id": "1", "name": "Test Location", "total": 5}]},
     )
     result = client.groups.get_location_statistics()
     assert len(result) == 1

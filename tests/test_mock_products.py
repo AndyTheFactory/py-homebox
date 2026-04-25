@@ -9,7 +9,7 @@ def client():
 
 
 def test_search_ean_from_barcode(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"barcode": "123"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"barcode": "123"}]})
     result = client.products.search_ean_from_barcode("123")
     assert len(result) == 1
     assert result[0].barcode == "123"

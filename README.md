@@ -30,6 +30,12 @@ Or with [uv](https://docs.astral.sh/uv/):
 ```bash
 uv add homebox
 ```
+---
+
+## Compatibility
+
+version 0.1.0 is compatible with Homebox v0.21.0 API.
+For newer additions to the Homebox API, we will release updates to this client library.
 
 ---
 
@@ -303,32 +309,13 @@ client.users.change_password(ChangePassword(current="old", new="new-secret"))
 client.users.user_logout()
 ```
 
----
-
-## Error handling
-
-All HTTP errors are raised as `requests.HTTPError` exceptions. Inspect the
-`response` attribute for status codes and server error messages:
-
-```python
-import requests
-
-try:
-    item = client.items.get_item("non-existent-uuid")
-except requests.HTTPError as exc:
-    print(exc.response.status_code)   # e.g. 404
-    print(exc.response.text)          # JSON error body
-```
-
----
-
 ## Contributing
 
-Pull requests are welcome. Please run the test suite before submitting:
+Pull requests are welcome.
+Make sure you install the pre-commit hooks and linters to maintain code quality and consistency:
 
 ```bash
 uv sync --group dev
-uv run pytest -m "not real"
-uv run ruff check .
-uv run ruff format .
+pre-commit install
 ```
+And make sure all tests pass before submitting a PR:

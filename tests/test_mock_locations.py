@@ -10,7 +10,7 @@ def client():
 
 
 def test_get_all_locations(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Location"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Location"}]})
     result = client.locations.get_all_locations()
     assert len(result) == 1
     assert result[0].name == "Test Location"
@@ -23,7 +23,7 @@ def test_create_location(mocker, client: HomeboxClient):
 
 
 def test_get_locations_tree(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Location"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Location"}]})
     result = client.locations.get_locations_tree()
     assert len(result) == 1
     assert result[0].name == "Test Location"

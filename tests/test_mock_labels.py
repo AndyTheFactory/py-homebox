@@ -10,7 +10,7 @@ def client():
 
 
 def test_get_all_labels(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Label"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Label"}]})
     result = client.labels.get_all_labels()
     assert len(result) == 1
     assert result[0].name == "Test Label"

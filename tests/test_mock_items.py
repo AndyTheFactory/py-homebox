@@ -79,9 +79,9 @@ def test_create_item_attachment(mocker, client: HomeboxClient):
 
 
 def test_get_item_attachment(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value={"token": "test_token"})
+    mocker.patch.object(client, "_get", return_value="test_token")
     result = client.items.get_item_attachment("1", "1")
-    assert result.token == "test_token"
+    assert result == "test_token"
 
 
 def test_update_item_attachment(mocker, client: HomeboxClient):
@@ -102,7 +102,7 @@ def test_duplicate_item(mocker, client: HomeboxClient):
 
 
 def test_get_maintenance_log(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=[{"id": "1", "name": "Test Log"}])
+    mocker.patch.object(client, "_request", return_value={"data": [{"id": "1", "name": "Test Log"}]})
     result = client.items.get_maintenance_log("1")
     assert len(result) == 1
     assert result[0].name == "Test Log"
@@ -118,7 +118,7 @@ def test_get_item_path(mocker, client: HomeboxClient):
     mocker.patch.object(
         client,
         "_request",
-        return_value=[{"id": "1", "name": "Test Item", "type": "item"}],
+        return_value={"data": [{"id": "1", "name": "Test Item", "type": "item"}]},
     )
     result = client.items.get_item_path("1")
     assert len(result) == 1
