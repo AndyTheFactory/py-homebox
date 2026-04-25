@@ -26,6 +26,11 @@ dependencies = [
 ]
 
 [dependency-groups]
+docs = [
+  "mkdocs >=1.6.0",
+  "mkdocs-material >=9.5.0",
+  "mkdocstrings[python] >=0.29.0",
+]
 dev = [
   "pytest >=8.0.0",
   "pytest-cov >=6.0.0",
