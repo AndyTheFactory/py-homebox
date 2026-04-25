@@ -100,6 +100,23 @@ def test_request_with_files_removes_content_type(authed_client):
     assert "Content-Type" not in call_kwargs[1]["headers"]
 
 
+def test_request_with_files_uses_form_data(authed_client):
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"id": "1", "name": "Test"}
+    with patch("requests.request", return_value=mock_response) as mock_req:
+        authed_client._request(
+            "post",
+            "/v1/items/1/attachments",
+            data={"type": "photo", "primary": True, "name": "photo.jpg"},
+            files={"file": ("photo.jpg", b"data")},
+        )
+    call_kwargs = mock_req.call_args[1]
+    assert call_kwargs["data"] == {"type": "photo", "primary": True, "name": "photo.jpg"}
+    assert "json" not in call_kwargs
+
+
 def test_request_url_construction(client):
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
@@ -210,6 +227,12 @@ def test_create_item_attachment_with_type_and_primary(mocker, client):
     mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
     result = client.items.create_item_attachment("1", b"file", type="photo", primary=True, name="photo.jpg")
     assert result.id == "1"
+
+
+def test_create_item_attachment_passes_named_file(mocker, client):
+    mock_request = mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
+    client.items.create_item_attachment("1", b"file", type="photo", primary=True, name="photo.jpg")
+    assert mock_request.call_args.kwargs["files"] == {"file": ("photo.jpg", b"file")}
 
 
 def test_get_maintenance_log_with_status(mocker, client):

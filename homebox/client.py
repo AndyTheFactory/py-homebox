@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Optional
+from typing import Any, Literal, Optional, overload
 
 import requests
 
@@ -19,7 +19,6 @@ from homebox.models import (
     GroupInvitationCreate,
     GroupStatistics,
     GroupUpdate,
-    ItemAttachmentToken,
     ItemAttachmentUpdate,
     ItemCreate,
     ItemOut,
@@ -109,7 +108,7 @@ class HomeboxClient:
         self.token = token
         self.headers = {"Content-Type": "application/json"}
         if token:
-            self.headers["Authorization"] = f"Bearer {token}"
+            self.headers["Authorization"] = f"{token}" if token.startswith("Bearer ") else f"Bearer {token}"
 
         self.actions = ActionsClient(self)
         self.assets = AssetsClient(self)
@@ -143,17 +142,22 @@ class HomeboxClient:
             requests.HTTPError: If the server returns a 4xx or 5xx status code.
         """
         headers = self.headers.copy()
+        request_kwargs = {
+            "params": params,
+            "headers": headers,
+            "timeout": timeout,
+        }
         if files:
             del headers["Content-Type"]
+            request_kwargs["data"] = data
+            request_kwargs["files"] = files
+        else:
+            request_kwargs["json"] = data
 
         response = requests.request(
             method,
             f"{self.base_url}{endpoint}",
-            params=params,
-            json=data,
-            files=files,
-            headers=headers,
-            timeout=timeout,
+            **request_kwargs,
         )
         response.raise_for_status()
 
@@ -165,11 +169,21 @@ class HomeboxClient:
             return {"data": result}
         return result
 
-    def _get(self, endpoint, params=None, data=None, files=None, timeout=None) -> str:
-        """Send an HTTP GET request and return the raw response text.
+    @overload
+    def _get(
+        self, endpoint, params=None, data=None, files=None, timeout=None, binary: Literal[True] = True
+    ) -> bytes: ...
 
-        Used for endpoints that return non-JSON content (e.g. CSV exports and
-        SVG/HTML labels).
+    @overload
+    def _get(
+        self, endpoint, params=None, data=None, files=None, timeout=None, binary: Literal[False] = False
+    ) -> str: ...
+
+    def _get(self, endpoint, params=None, data=None, files=None, timeout=None, binary=False) -> str | bytes:
+        """Send an HTTP GET request and return the raw response body.
+
+        Used for endpoints that return non-JSON content (e.g. CSV exports,
+        printable labels, and generated images).
 
         Args:
             endpoint: API path relative to :attr:`base_url`.
@@ -177,9 +191,11 @@ class HomeboxClient:
             data: Optional request body, serialised as JSON.
             files: Optional multipart files mapping.
             timeout: Optional request timeout in seconds.
+            binary: When True return raw bytes, otherwise return decoded text.
 
         Returns:
-            Raw response body as a string, or an empty string for HTTP 204.
+            str | bytes: Raw response body (text by default, bytes when
+            ``binary=True``). HTTP 204 responses return an empty string.
 
         Raises:
             requests.HTTPError: If the server returns a 4xx or 5xx status code.
@@ -195,7 +211,7 @@ class HomeboxClient:
         if response.status_code == 204:
             return ""
 
-        return response.text
+        return response.text if not binary else response.content
 
     def login(self, username, password, stay_logged_in=False, provider=None):
         """Authenticate with username and password and store the resulting token.
@@ -230,7 +246,10 @@ class HomeboxClient:
         response = self._request("post", "/v1/users/login", params=params, data=login_form.model_dump())
         token_response = TokenResponse(**response)
         self.token = token_response.token
-        self.headers["Authorization"] = f"Bearer {self.token}"
+        if self.token:
+            self.headers["Authorization"] = (
+                f"{self.token}" if self.token.startswith("Bearer ") else f"Bearer {self.token}"
+            )
         return token_response
 
     def currency(self):
@@ -382,7 +401,8 @@ class GroupsClient:
             list[TotalsByOrganizer]: One entry per label with the label's ID,
                 name, and aggregated total value.
         """
-        return [TotalsByOrganizer(**item) for item in self.client._request("get", "/v1/groups/statistics/labels")]
+        data = self.client._request("get", "/v1/groups/statistics/labels")
+        return [TotalsByOrganizer(**item) for item in data["data"]]
 
     def get_location_statistics(self) -> list[TotalsByOrganizer]:
         """Return the total item value grouped by location.
@@ -391,7 +411,9 @@ class GroupsClient:
             list[TotalsByOrganizer]: One entry per location with the location's
                 ID, name, and aggregated total value.
         """
-        return [TotalsByOrganizer(**item) for item in self.client._request("get", "/v1/groups/statistics/locations")]
+        data = self.client._request("get", "/v1/groups/statistics/locations")
+
+        return [TotalsByOrganizer(**item) for item in data["data"]]
 
     def get_purchase_price_statistics(self, start: str | None = None, end: str | None = None) -> ValueOverTime:
         """Return the cumulative purchase price of items over a date range.
@@ -480,7 +502,7 @@ class ItemsClient:
         Returns:
             str: Raw CSV text that can be written to a file or parsed directly.
         """
-        return self.client._get("/v1/items/export")
+        return self.client._get("/v1/items/export", binary=False)
 
     def get_all_custom_field_names(self) -> list[str]:
         """Return the distinct custom field names used across all items.
@@ -509,7 +531,7 @@ class ItemsClient:
             csv: Raw CSV bytes to upload (e.g. the contents of an exported
                 file opened in binary mode).
         """
-        files = {"csv": csv}
+        files = {"csv": ("items.csv", csv, "text/csv")}
         self.client._request("post", "/v1/items/import", files=files)
 
     def get_item(self, id: str) -> ItemOut:
@@ -580,7 +602,7 @@ class ItemsClient:
             ItemOut: Updated full item representation including the new
                 attachment.
         """
-        files = {"file": file}
+        files = {"file": (name or "attachment", file)}
         data = {}
         if type:
             data["type"] = type
@@ -590,7 +612,7 @@ class ItemsClient:
             data["name"] = name
         return ItemOut(**self.client._request("post", f"/v1/items/{id}/attachments", data=data, files=files))
 
-    def get_item_attachment(self, id: str, attachment_id: str) -> ItemAttachmentToken:
+    def get_item_attachment(self, id: str, attachment_id: str) -> bytes:
         """Retrieve a short-lived download token for an item attachment.
 
         Args:
@@ -598,10 +620,9 @@ class ItemsClient:
             attachment_id: UUID of the attachment.
 
         Returns:
-            ItemAttachmentToken: A token that can be appended to the download
-                URL to access the attachment without a full Bearer token.
+            bytes: Raw bytes of the attachment.
         """
-        return ItemAttachmentToken(**self.client._request("get", f"/v1/items/{id}/attachments/{attachment_id}"))
+        return self.client._get(f"/v1/items/{id}/attachments/{attachment_id}", binary=True)
 
     def update_item_attachment(self, id: str, attachment_id: str, data: ItemAttachmentUpdate) -> ItemOut:
         """Update metadata for an existing item attachment.
@@ -657,10 +678,8 @@ class ItemsClient:
         params = {}
         if status:
             params["status"] = status.value
-        return [
-            MaintenanceEntryWithDetails(**item)
-            for item in self.client._request("get", f"/v1/items/{id}/maintenance", params=params)
-        ]
+        data = self.client._request("get", f"/v1/items/{id}/maintenance", params=params)
+        return [MaintenanceEntryWithDetails(**item) for item in data.get("data", [])]
 
     def create_maintenance_entry(self, id: str, data: MaintenanceEntryCreate) -> MaintenanceEntry:
         """Add a maintenance log entry to an item.
@@ -687,7 +706,8 @@ class ItemsClient:
             list[ItemPath]: Ordered list of path nodes.  Each node carries an
                 ``id``, ``name``, and ``type`` (``"location"`` or ``"item"``).
         """
-        return [ItemPath(**item) for item in self.client._request("get", f"/v1/items/{id}/path")]
+        data = self.client._request("get", f"/v1/items/{id}/path")
+        return [ItemPath(**item) for item in data.get("data", [])]
 
 
 class LabelsClient:
@@ -706,7 +726,8 @@ class LabelsClient:
             list[LabelOut]: Every label with its ID, name, colour, description,
                 and timestamps.
         """
-        return [LabelOut(**item) for item in self.client._request("get", "/v1/labels")]
+        data = self.client._request("get", "/v1/labels")
+        return [LabelOut(**item) for item in data.get("data", [])]
 
     def create_label(self, data: LabelCreate) -> LabelSummary:
         """Create a new label.
@@ -777,7 +798,8 @@ class LocationsClient:
         params = {}
         if filterChildren is not None:
             params["filterChildren"] = filterChildren
-        return [LocationOutCount(**item) for item in self.client._request("get", "/v1/locations", params=params)]
+        data = self.client._request("get", "/v1/locations", params=params)
+        return [LocationOutCount(**item) for item in data["data"]]
 
     def create_location(self, data: LocationCreate) -> LocationSummary:
         """Create a new location.
@@ -806,7 +828,8 @@ class LocationsClient:
         params = {}
         if withItems:
             params["withItems"] = withItems
-        return [TreeItem(**item) for item in self.client._request("get", "/v1/locations/tree", params=params)]
+        data = self.client._request("get", "/v1/locations/tree", params=params)
+        return [TreeItem(**item) for item in data.get("data", [])]
 
     def get_location(self, id: str) -> LocationOut:
         """Return the details of a single location.
@@ -865,10 +888,8 @@ class MaintenanceClient:
         params = {}
         if status:
             params["status"] = status.value
-        return [
-            MaintenanceEntryWithDetails(**item)
-            for item in self.client._request("get", "/v1/maintenance", params=params)
-        ]
+        data = self.client._request("get", "/v1/maintenance", params=params)
+        return [MaintenanceEntryWithDetails(**item) for item in data.get("data", [])]
 
     def update_maintenance_entry(self, id: str, data: MaintenanceEntryUpdate) -> MaintenanceEntry:
         """Update an existing maintenance entry.
@@ -907,7 +928,8 @@ class NotifiersClient:
             list[NotifierOut]: Each notifier includes its ID, name, webhook URL,
                 active flag, and group/user association.
         """
-        return [NotifierOut(**item) for item in self.client._request("get", "/v1/notifiers")]
+        data = self.client._request("get", "/v1/notifiers")
+        return [NotifierOut(**item) for item in data.get("data", [])]
 
     def create_notifier(self, data: NotifierCreate) -> NotifierOut:
         """Create a new notification channel.
@@ -1040,7 +1062,7 @@ class ReportingClient:
         Returns:
             str: Raw CSV-formatted Bill of Materials report.
         """
-        return self.client._get("/v1/reporting/bill-of-materials")
+        return self.client._get("/v1/reporting/bill-of-materials", binary=False)
 
 
 class LabelMakerClient:
@@ -1052,7 +1074,7 @@ class LabelMakerClient:
     def __init__(self, client: HomeboxClient):
         self.client = client
 
-    def get_asset_label(self, id: str, print: bool | None = None) -> str:
+    def get_asset_label(self, id: str, print: bool | None = None) -> bytes:
         """Return a printable label for an asset identified by its asset ID.
 
         Args:
@@ -1061,14 +1083,14 @@ class LabelMakerClient:
                 label.
 
         Returns:
-            str: Label content (typically SVG or HTML).
+            bytes: Label content (typically SVG or HTML).
         """
         params = {}
         if print:
             params["print"] = print
-        return self.client._get(f"/v1/labelmaker/assets/{id}", params=params)
+        return self.client._get(f"/v1/labelmaker/assets/{id}", params=params, binary=True)
 
-    def get_item_label(self, id: str, print: bool | None = None) -> str:
+    def get_item_label(self, id: str, print: bool | None = None) -> bytes:
         """Return a printable label for an item.
 
         Args:
@@ -1077,14 +1099,14 @@ class LabelMakerClient:
                 label.
 
         Returns:
-            str: Label content (typically SVG or HTML).
+            bytes: Label content (typically SVG or HTML).
         """
         params = {}
         if print:
             params["print"] = print
-        return self.client._get(f"/v1/labelmaker/item/{id}", params=params)
+        return self.client._get(f"/v1/labelmaker/item/{id}", params=params, binary=True)
 
-    def get_location_label(self, id: str, print: bool | None = None) -> str:
+    def get_location_label(self, id: str, print: bool | None = None) -> bytes:
         """Return a printable label for a location.
 
         Args:
@@ -1098,7 +1120,7 @@ class LabelMakerClient:
         params = {}
         if print:
             params["print"] = print
-        return self.client._get(f"/v1/labelmaker/location/{id}", params=params)
+        return self.client._get(f"/v1/labelmaker/location/{id}", params=params, binary=True)
 
 
 class ProductsClient:
@@ -1127,21 +1149,19 @@ class ProductsClient:
         params = {}
         if data:
             params["data"] = data
-        return [
-            BarcodeProduct(**item)
-            for item in self.client._request("get", "/v1/products/search-from-barcode", params=params)
-        ]
+        resp = self.client._request("get", "/v1/products/search-from-barcode", params=params)
+        return [BarcodeProduct(**item) for item in resp.get("data", [])]
 
-    def create_qr_code(self, data: str | None = None) -> str:
+    def create_qr_code(self, data: str | None = None) -> bytes:
         """Generate a QR code image for an arbitrary string.
 
         Args:
             data: The string to encode in the QR code (e.g. a URL or asset ID).
 
         Returns:
-            str: QR code image content (SVG or PNG depending on server config).
+            bytes: QR code image content (SVG or PNG depending on server config).
         """
         params = {}
         if data:
             params["data"] = data
-        return self.client._get("/v1/qrcode", params=params)
+        return self.client._get("/v1/qrcode", params=params, binary=True)

@@ -44,8 +44,9 @@ def test_get_all_custom_field_values(mocker, client: HomeboxClient):
 
 
 def test_import_items(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=None)
+    mock_request = mocker.patch.object(client, "_request", return_value=None)
     client.items.import_items(b"csv,data")
+    assert mock_request.call_args.kwargs["files"] == {"csv": ("items.csv", b"csv,data", "text/csv")}
 
 
 def test_get_item(mocker, client: HomeboxClient):
