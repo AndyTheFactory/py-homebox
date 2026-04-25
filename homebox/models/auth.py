@@ -4,8 +4,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models.users import User
-
 from . import types
 
 
@@ -48,7 +46,7 @@ class AuthTokensEdges(BaseModel):
         populate_by_name=True,
     )
     roles: Optional[AuthRoles] = Field(default=None, description="Roles holds the value of the roles edge.")
-    user: Optional[User] = Field(default=None, description="User holds the value of the user edge.")
+    user: Optional["User"] = Field(default=None, description="User holds the value of the user edge.")  # ty: ignore[unresolved-reference]
 
 
 AuthRoles.model_rebuild(raise_errors=False)

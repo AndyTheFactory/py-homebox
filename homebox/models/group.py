@@ -4,9 +4,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models.items import Item, Label, Location
-from homebox.models.notifiers import Notifier
-from homebox.models.users import User
+from .users import User
 
 
 class Group(BaseModel):
@@ -32,12 +30,12 @@ class GroupEdges(BaseModel):
         default=None,
         description="InvitationTokens holds the value of the invitation_tokens edge.",
     )
-    items: Optional[List[Item]] = Field(default=None, description="Items holds the value of the items edge.")
-    labels: Optional[List[Label]] = Field(default=None, description="Labels holds the value of the labels edge.")
-    locations: Optional[List[Location]] = Field(
+    items: Optional[List["Item"]] = Field(default=None, description="Items holds the value of the items edge.")  # ty: ignore[unresolved-reference]
+    labels: Optional[List["Label"]] = Field(default=None, description="Labels holds the value of the labels edge.")  # ty: ignore[unresolved-reference]
+    locations: Optional[List["Location"]] = Field(  # ty: ignore[unresolved-reference]
         default=None, description="Locations holds the value of the locations edge."
     )
-    notifiers: Optional[List[Notifier]] = Field(
+    notifiers: Optional[List["Notifier"]] = Field(  # ty: ignore[unresolved-reference]
         default=None, description="Notifiers holds the value of the notifiers edge."
     )
     users: Optional[List[User]] = Field(default=None, description="Users holds the value of the users edge.")

@@ -7,12 +7,12 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models import Group, MaintenanceEntry
-from homebox.models.types import ItemFieldType, ItemType
-
 from .attachment import Attachment
+from .group import Group
 from .labels import Label, LabelSummary
 from .locations import Location, LocationSummary
+from .maintenance import MaintenanceEntry
+from .types import ItemFieldType, ItemType
 
 
 class Item(BaseModel):

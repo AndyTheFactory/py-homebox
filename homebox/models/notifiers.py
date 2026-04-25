@@ -7,8 +7,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models import Group
-from homebox.models.users import User
+from .group import Group
+from .users import User
 
 
 class Notifier(BaseModel):

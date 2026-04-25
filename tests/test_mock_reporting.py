@@ -9,6 +9,6 @@ def client():
 
 
 def test_export_bill_of_materials(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value="csv,data")
+    mocker.patch.object(client, "_get", return_value="csv,data")
     result = client.reporting.export_bill_of_materials()
     assert result == "csv,data"

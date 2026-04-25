@@ -16,6 +16,6 @@ def test_search_ean_from_barcode(mocker, client: HomeboxClient):
 
 
 def test_create_qr_code(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value="qr_code_data")
+    mocker.patch.object(client, "_get", return_value="qr_code_data")
     result = client.products.create_qr_code("test")
     assert result == "qr_code_data"

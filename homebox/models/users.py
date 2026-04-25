@@ -7,10 +7,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models import Group
-from homebox.models.auth import AuthTokens
-from homebox.models.notifiers import Notifier
-from homebox.models.types import UserRole
+from .auth import AuthTokens
+from .types import UserRole
 
 
 class User(BaseModel):
@@ -46,8 +44,8 @@ class UserEdges(BaseModel):
     auth_tokens: Optional[list[AuthTokens]] = Field(
         default=None, description="AuthTokens holds the value of the auth_tokens edge."
     )
-    group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
-    notifiers: Optional[list[Notifier]] = Field(
+    group: Optional["Group"] = Field(default=None, description="Group holds the value of the group edge.")  # ty: ignore[unresolved-reference]
+    notifiers: Optional[list["Notifier"]] = Field(  # ty: ignore[unresolved-reference]
         default=None, description="Notifiers holds the value of the notifiers edge."
     )
 

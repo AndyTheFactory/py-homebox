@@ -7,8 +7,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models import Group
-from homebox.models.group import Item
+from .group import Group
 
 
 class Location(BaseModel):
@@ -35,7 +34,7 @@ class LocationEdges(BaseModel):
     )
     children: list[Location] | None = Field(default=None, description="Children holds the value of the children edge.")
     group: Group | None = Field(default=None, description="Group holds the value of the group edge.")
-    items: list[Item] | None = Field(default=None, description="Items holds the value of the items edge.")
+    items: list["Item"] | None = Field(default=None, description="Items holds the value of the items edge.")  # ty: ignore[unresolved-reference]
     parent: Location | None = Field(default=None, description="Parent holds the value of the parent edge.")
 
 

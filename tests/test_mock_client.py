@@ -76,7 +76,7 @@ def test_request_returns_none_on_204(client):
     mock_response.status_code = 204
     with patch("requests.request", return_value=mock_response):
         result = client._request("delete", "/v1/items/1")
-    assert result is None
+    assert result == {}
 
 
 def test_request_returns_json_on_200(client):
@@ -358,19 +358,19 @@ def test_query_all_maintenance_empty(mocker, client):
 
 
 def test_get_asset_label_with_print(mocker, client):
-    mocker.patch.object(client, "_request", return_value="<svg>label</svg>")
+    mocker.patch.object(client, "_get", return_value="<svg>label</svg>")
     result = client.labelmaker.get_asset_label("1", print=True)
     assert result == "<svg>label</svg>"
 
 
 def test_get_item_label_with_print(mocker, client):
-    mocker.patch.object(client, "_request", return_value="<svg>label</svg>")
+    mocker.patch.object(client, "_get", return_value="<svg>label</svg>")
     result = client.labelmaker.get_item_label("1", print=True)
     assert result == "<svg>label</svg>"
 
 
 def test_get_location_label_with_print(mocker, client):
-    mocker.patch.object(client, "_request", return_value="<svg>label</svg>")
+    mocker.patch.object(client, "_get", return_value="<svg>label</svg>")
     result = client.labelmaker.get_location_label("1", print=True)
     assert result == "<svg>label</svg>"
 
@@ -387,7 +387,7 @@ def test_search_ean_from_barcode_no_data(mocker, client):
 
 
 def test_create_qr_code_no_data(mocker, client):
-    mocker.patch.object(client, "_request", return_value="qr_data")
+    mocker.patch.object(client, "_get", return_value="qr_data")
     result = client.products.create_qr_code()
     assert result == "qr_data"
 

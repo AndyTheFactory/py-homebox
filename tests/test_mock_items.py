@@ -26,19 +26,19 @@ def test_create_item(mocker, client: HomeboxClient):
 
 
 def test_export_items(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value="csv,data")
+    mocker.patch.object(client, "_get", return_value="csv,data")
     result = client.items.export_items()
     assert result == "csv,data"
 
 
 def test_get_all_custom_field_names(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=["field1", "field2"])
+    mocker.patch.object(client, "_request", return_value={"data": ["field1", "field2"]})
     result = client.items.get_all_custom_field_names()
     assert len(result) == 2
 
 
 def test_get_all_custom_field_values(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value=["value1", "value2"])
+    mocker.patch.object(client, "_request", return_value={"data": ["value1", "value2"]})
     result = client.items.get_all_custom_field_values()
     assert len(result) == 2
 

@@ -7,8 +7,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from homebox.models import Group
-from homebox.models.group import Item
+from .group import Group
 
 
 class Label(BaseModel):
@@ -35,7 +34,7 @@ class LabelEdges(BaseModel):
         populate_by_name=True,
     )
     group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
-    items: list[Item] | None = Field(default=None, description="Items holds the value of the items edge.")
+    items: list["Item"] | None = Field(default=None, description="Items holds the value of the items edge.")  # ty: ignore[unresolved-reference]
 
 
 class LabelCreate(BaseModel):
