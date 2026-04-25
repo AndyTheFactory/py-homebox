@@ -7,14 +7,7 @@ importing from ``homebox.models`` as they did before the refactor.
 from __future__ import annotations
 
 from .currencies import Currency
-from .groups import (
-    Group,
-    GroupStatistics,
-    GroupUpdate,
-    TotalsByOrganizer,
-    ValueOverTime,
-    ValueOverTimeEntry,
-)
+from .groups import Group, GroupStatistics, GroupUpdate, TotalsByOrganizer, ValueOverTime, ValueOverTimeEntry
 from .items import (
     DuplicateOptions,
     ItemAttachment,
@@ -29,31 +22,22 @@ from .items import (
     PaginationResultRepoItemSummary,
 )
 from .labels import LabelCreate, LabelOut, LabelSummary
-from .locations import (
-    LocationCreate,
-    LocationOut,
-    LocationOutCount,
-    LocationSummary,
-    LocationUpdate,
-    TreeItem,
-)
-from .maintenance import (
-    MaintenanceEntry,
-    MaintenanceEntryCreate,
-    MaintenanceEntryUpdate,
-    MaintenanceEntryWithDetails,
-)
+from .locations import LocationCreate, LocationOut, LocationOutCount, LocationSummary, LocationUpdate, TreeItem
+from .maintenance import MaintenanceEntry, MaintenanceEntryCreate, MaintenanceEntryUpdate, MaintenanceEntryWithDetails
 from .notifiers import NotifierCreate, NotifierOut, NotifierUpdate
 from .products import BarcodeProduct
 from .services import Latest, UserRegistration
-from .types import (
-    AttachmentType,
-    AuthRole,
-    ItemFieldType,
-    ItemType,
-    MaintenanceFilterStatus,
-    UserRole,
+from .templates import (
+    ItemTemplateCreate,
+    ItemTemplateCreateItemRequest,
+    ItemTemplateOut,
+    ItemTemplateSummary,
+    ItemTemplateUpdate,
+    TemplateField,
+    TemplateLabelSummary,
+    TemplateLocationSummary,
 )
+from .types import AttachmentType, AuthRole, ItemFieldType, ItemType, MaintenanceFilterStatus, UserRole
 from .users import UserOut, UserUpdate
 from .v1 import (
     ActionAmountResult,
@@ -64,6 +48,7 @@ from .v1 import (
     GroupInvitationCreate,
     ItemAttachmentToken,
     LoginForm,
+    OIDCStatus,
     TokenResponse,
     Wrapped,
 )
@@ -94,6 +79,11 @@ __all__ = [
     "ItemPatch",
     "ItemPath",
     "ItemSummary",
+    "ItemTemplateCreate",
+    "ItemTemplateCreateItemRequest",
+    "ItemTemplateOut",
+    "ItemTemplateSummary",
+    "ItemTemplateUpdate",
     "ItemType",
     "AttachmentType",
     "ItemUpdate",
@@ -115,7 +105,11 @@ __all__ = [
     "NotifierCreate",
     "NotifierOut",
     "NotifierUpdate",
+    "OIDCStatus",
     "PaginationResultRepoItemSummary",
+    "TemplateField",
+    "TemplateLabelSummary",
+    "TemplateLocationSummary",
     "TokenResponse",
     "TotalsByOrganizer",
     "TreeItem",
