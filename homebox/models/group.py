@@ -1,3 +1,5 @@
+"""Pydantic models for Homebox group / internal graph entities."""
+
 from __future__ import annotations
 
 from typing import List, Optional
@@ -8,6 +10,8 @@ from .users import User
 
 
 class Group(BaseModel):
+    """Internal ORM entity representing a Homebox group."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -23,6 +27,8 @@ class Group(BaseModel):
 
 
 class GroupEdges(BaseModel):
+    """Graph edges for the Group ORM entity."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -42,6 +48,8 @@ class GroupEdges(BaseModel):
 
 
 class GroupInvitationToken(BaseModel):
+    """Internal ORM entity for a group invitation token."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -58,6 +66,8 @@ class GroupInvitationToken(BaseModel):
 
 
 class GroupInvitationTokenEdges(BaseModel):
+    """Graph edges for the GroupInvitationToken ORM entity."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -65,6 +75,12 @@ class GroupInvitationTokenEdges(BaseModel):
 
 
 class GroupStatistics(BaseModel):
+    """Aggregate statistics for a group (items in group.py are the internal ORM entity).
+
+    Note: This is the *internal* version used by the ORM entity. For the API DTO,
+    see :class:`homebox.models.groups.GroupStatistics`.
+    """
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -77,6 +93,8 @@ class GroupStatistics(BaseModel):
 
 
 class GroupUpdate(BaseModel):
+    """Payload for updating a group's name and/or currency (group.py internal)."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -85,6 +103,8 @@ class GroupUpdate(BaseModel):
 
 
 class TotalsByOrganizer(BaseModel):
+    """Aggregated total value for a single label or location organiser (group.py internal)."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -94,6 +114,8 @@ class TotalsByOrganizer(BaseModel):
 
 
 class ValueOverTimeEntry(BaseModel):
+    """A single data point in a time-series value report (group.py internal)."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -103,6 +125,8 @@ class ValueOverTimeEntry(BaseModel):
 
 
 class ValueOverTime(BaseModel):
+    """Time-series purchase price report for a date range (group.py internal)."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )

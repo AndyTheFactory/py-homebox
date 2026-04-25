@@ -1,3 +1,5 @@
+"""Pydantic models for Homebox authentication entities."""
+
 from __future__ import annotations
 
 from typing import List, Optional
@@ -8,6 +10,8 @@ from . import types
 
 
 class AuthRoles(BaseModel):
+    """Internal ORM entity representing an authentication role assignment."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -20,6 +24,8 @@ class AuthRoles(BaseModel):
 
 
 class AuthRolesEdges(BaseModel):
+    """Graph edges for the AuthRoles ORM entity."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -27,6 +33,8 @@ class AuthRolesEdges(BaseModel):
 
 
 class AuthTokens(BaseModel):
+    """Internal ORM entity representing a persisted authentication token."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -42,6 +50,8 @@ class AuthTokens(BaseModel):
 
 
 class AuthTokensEdges(BaseModel):
+    """Graph edges for the AuthTokens ORM entity."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
