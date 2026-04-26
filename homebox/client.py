@@ -1167,12 +1167,12 @@ class UsersClient:
         """Update the current user's profile information.
 
         Args:
-            data: Fields to update (``name`` and/or ``email``).
+            data: Fields to update (``name`` and ``email``).
 
         Returns:
             UserUpdate: The updated profile data as echoed by the server.
         """
-        response = self.client._request("put", "/v1/users/self", data=data.model_dump(exclude_none=True))
+        response = self.client._request("put", "/v1/users/self", data=data.model_dump())
         payload = response.get("item", response)
         return UserUpdate(**payload)
 

@@ -93,8 +93,8 @@ class UserUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    email: Optional[str] = None
-    name: Optional[str] = None
+    email: str
+    name: str
 
 
 User.model_rebuild(raise_errors=False)

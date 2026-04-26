@@ -74,9 +74,12 @@ def test_get_user_self(mocker, client: HomeboxClient):
 
 
 def test_update_account(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value={"item": {"id": "1", "name": "Updated User"}})
-    result = client.users.update_account(models.UserUpdate(name="Updated User"))
+    mocker.patch.object(
+        client, "_request", return_value={"item": {"id": "1", "name": "Updated User", "email": "updated@example.com"}}
+    )
+    result = client.users.update_account(models.UserUpdate(name="Updated User", email="updated@example.com"))
     assert result.name == "Updated User"
+    assert result.email == "updated@example.com"
 
 
 def test_delete_account(mocker, client: HomeboxClient):

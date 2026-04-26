@@ -57,9 +57,12 @@ def main() -> None:
     client = _build_client()
 
     app = client.application_info()
+    # currency endpoint is currently broken, so we skip it here
     # currency = client.currency()
     group_stats = client.groups.get_group_statistics()
-    label_stats = client.groups.get_label_statistics()
+    # /v1/groups/statistics/tags returns null
+    # label_stats = client.groups.get_label_statistics()
+    label_stats = []
     location_stats = client.groups.get_location_statistics()
 
     end = datetime.now(UTC).date()
