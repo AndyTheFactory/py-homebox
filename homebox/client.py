@@ -60,6 +60,7 @@ from homebox.models import (
     TreeItem,
     UserOut,
     UserRegistration,
+    UserSettings,
     UserSummary,
     UserUpdate,
     ValueOverTime,
@@ -1211,6 +1212,30 @@ class UsersClient:
         payload = response.get("item", response)
         return UserUpdate(**payload)
 
+    def get_user_settings(self) -> UserSettings:
+        """Return settings for the currently authenticated user.
+
+        Returns:
+            UserSettings: Arbitrary per-user settings key/value object.
+        """
+        response = self.client._request("get", "/v1/users/self/settings")
+        payload = response.get("item", response)
+        return UserSettings(**payload)
+
+    def update_user_settings(self, data: UserSettings | dict[str, Any]) -> UserSettings:
+        """Update settings for the currently authenticated user.
+
+        Args:
+            data: Arbitrary key/value settings payload.
+
+        Returns:
+            UserSettings: Updated user settings returned by the server.
+        """
+        payload = data.model_dump(exclude_none=True) if isinstance(data, UserSettings) else data
+        response = self.client._request("put", "/v1/users/self/settings", data=payload)
+        wrapped = response.get("item", response)
+        return UserSettings(**wrapped)
+
     def delete_account(self):
         """Permanently delete the current user's account.
 
@@ -1337,7 +1362,7 @@ class LabelMakerClient:
         params = {}
         if print:
             params["print"] = print
-        return self.client._get(f"/v1/labelmaker/assets/{id}", params=params, binary=True)
+        return self.client._get(f"/v1/labelmaker/asset/{id}", params=params, binary=True)
 
     def get_item_label(self, id: str, print: bool | None = None) -> bytes:
         """Return a printable label for an item.

@@ -9,9 +9,10 @@ def client():
 
 
 def test_get_asset_label(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_get", return_value="label_data")
+    mock_get = mocker.patch.object(client, "_get", return_value="label_data")
     result = client.labelmaker.get_asset_label("1")
     assert result == "label_data"
+    assert mock_get.call_args.args[0] == "/v1/labelmaker/asset/1"
 
 
 def test_get_item_label(mocker, client: HomeboxClient):

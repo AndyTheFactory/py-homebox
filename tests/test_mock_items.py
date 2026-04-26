@@ -147,3 +147,17 @@ def test_get_item_path(mocker, client: HomeboxClient):
     result = client.items.get_item_path("1")
     assert len(result) == 1
     assert result[0].name == "Test Item"
+
+
+def test_item_quantity_accepts_float_in_response(mocker, client: HomeboxClient):
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item", "quantity": 1.5})
+    result = client.items.get_item("1")
+    assert result.quantity == 1.5
+
+
+def test_create_item_accepts_float_quantity(mocker, client: HomeboxClient):
+    mock_request = mocker.patch.object(
+        client, "_request", return_value={"id": "1", "name": "Test Item", "quantity": 2.25}
+    )
+    client.items.create_item(models.ItemCreate(name="Test Item", quantity=2.25))
+    assert mock_request.call_args.kwargs["data"]["quantity"] == 2.25

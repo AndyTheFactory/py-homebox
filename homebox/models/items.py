@@ -63,7 +63,7 @@ class Item(BaseModel):
         default=None,
         description='PurchaseTime holds the value of the "purchase_time" field.',
     )
-    quantity: Optional[int] = Field(default=None, description='Quantity holds the value of the "quantity" field.')
+    quantity: Optional[float] = Field(default=None, description='Quantity holds the value of the "quantity" field.')
     serial_number: Optional[str] = Field(
         default=None,
         description='SerialNumber holds the value of the "serial_number" field.',
@@ -216,7 +216,7 @@ class ItemCreate(BaseModel):
     locationId: Optional[str] = Field(default=None, description="Edges")
     name: str = Field(..., min_length=1, max_length=255)
     parentId: Optional[str] = None
-    quantity: Optional[int] = None
+    quantity: Optional[float] = None
 
 
 class ItemPatch(BaseModel):
@@ -229,7 +229,7 @@ class ItemPatch(BaseModel):
     tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
     locationId: Optional[str] = None
-    quantity: Optional[int] = None
+    quantity: Optional[float] = None
 
 
 class ItemUpdate(BaseModel):
@@ -256,7 +256,7 @@ class ItemUpdate(BaseModel):
     purchaseFrom: Optional[str] = Field(default=None, max_length=255)
     purchasePrice: Optional[float] = None
     purchaseTime: Optional[str] = Field(default=None, description="Purchase")
-    quantity: Optional[int] = None
+    quantity: Optional[float] = None
     serialNumber: Optional[str] = Field(default=None, description="Identifications")
     soldNotes: Optional[str] = None
     soldPrice: Optional[float] = None
@@ -285,7 +285,7 @@ class ItemSummary(BaseModel):
     location: Optional[LocationSummary] = Field(default=None, description="Edges")
     name: Optional[str] = None
     purchasePrice: Optional[float] = None
-    quantity: Optional[int] = None
+    quantity: Optional[float] = None
     soldTime: Optional[str] = Field(default=None, description="Sale details")
     thumbnailId: Optional[str] = None
     updatedAt: Optional[str] = None
@@ -325,7 +325,7 @@ class ItemOut(BaseModel):
     purchaseFrom: Optional[str] = None
     purchasePrice: Optional[float] = None
     purchaseTime: Optional[str] = Field(default=None, description="Purchase")
-    quantity: Optional[int] = None
+    quantity: Optional[float] = None
     serialNumber: Optional[str] = None
     soldNotes: Optional[str] = None
     soldPrice: Optional[float] = None

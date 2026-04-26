@@ -1,3 +1,19 @@
+# v 0.5.0
+
+Upgrade the client to Homebox API v0.25.0.
+
+* added support for new user settings endpoints:
+	* `GET /v1/users/self/settings`
+	* `PUT /v1/users/self/settings`
+* updated labelmaker asset endpoint to match v25:
+	* `GET /v1/labelmaker/asset/{id}`
+* aligned numeric field types with v25 schema changes:
+	* item quantity fields now accept numbers (`float`) in request/response DTOs
+	* template `defaultQuantity` and template create-item `quantity` now accept numbers
+	* location `itemCount` now accepts numbers
+* added `UserSettings` model for arbitrary user settings payloads
+* preserved backward-compatible client APIs for all previously mapped methods and aliases
+
 # v 0.4.0
 
 Upgrade the client to Homebox API v0.24.0.
