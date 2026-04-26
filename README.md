@@ -296,6 +296,9 @@ with open("bom.csv", "w") as f:
 ```python
 # Get a printable label for an item
 label_svg = client.labelmaker.get_item_label("item-uuid", print=True)
+
+# Get a printable label by asset ID (v0.5.0+ endpoint)
+asset_label_svg = client.labelmaker.get_asset_label("000001", print=True)
 ```
 
 ### User management
@@ -312,6 +315,12 @@ client.users.update_account(UserUpdate(name="Alice Smith", email=me.email))
 
 # Change password
 client.users.change_password(ChangePassword(current="old", new="new-secret"))
+
+# Read and update arbitrary per-user settings (v0.5.0)
+settings = client.users.get_user_settings()
+settings_payload = settings.model_dump(exclude_none=True)
+settings_payload["ui.table.pageSize"] = 50
+client.users.update_user_settings(settings_payload)
 
 # Log out
 client.users.user_logout()

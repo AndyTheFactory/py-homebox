@@ -19,7 +19,7 @@ from pathlib import Path
 import requests
 
 from homebox import HomeboxClient
-from homebox.models import GroupInvitationCreate, UserRegistration, UserUpdate
+from homebox.models import GroupInvitationCreate, UserRegistration, UserSettings, UserUpdate
 
 
 def _load_dotenv() -> None:
@@ -95,6 +95,19 @@ def main() -> None:
     updated_name = f"{name} Updated"
     updated_user = user_client.users.update_account(UserUpdate(name=updated_name, email=email))
     print(f"Updated user profile name to: {updated_user.name}")
+
+    # v0.5.0: retrieve and update arbitrary per-user settings.
+    current_settings = user_client.users.get_user_settings().model_dump(exclude_none=True)
+    print(f"Current settings keys: {sorted(current_settings.keys()) if current_settings else 'none'}")
+
+    current_settings["examples.user_management.last_run"] = ts
+    current_settings["examples.user_management.enabled"] = True
+
+    updated_settings = user_client.users.update_user_settings(UserSettings(**current_settings))
+    updated_payload = updated_settings.model_dump(exclude_none=True)
+    print(
+        f"Updated setting examples.user_management.last_run={updated_payload.get('examples.user_management.last_run')}"
+    )
 
     user_client.users.delete_account()
     print("Deleted the created user account")
