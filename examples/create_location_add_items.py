@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from homebox import HomeboxClient
-from homebox.models import ItemCreate, LocationCreate
+from homebox.models import DuplicateOptions, ItemCreate, LocationCreate
 
 
 def _load_dotenv() -> None:
@@ -81,67 +81,104 @@ def main() -> None:
     _load_dotenv()
     client = _build_client()
 
+    created_location_id: str | None = None
+    created_item_ids: list[str] = []
+
     location_name = f"Example Storage {datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
-    location = client.locations.create_location(
-        LocationCreate(
-            name=location_name,
-            description="Location created by create_location_add_items.py",
+
+    try:
+        location = client.locations.create_location(
+            LocationCreate(
+                name=location_name,
+                description="Location created by create_location_add_items.py",
+            )
         )
-    )
-    print(f"Created location: {location.name} ({location.id})")
+        created_location_id = location.id
+        print(f"Created location: {location.name} ({location.id})")
 
-    featured_item = client.items.create_item(
-        ItemCreate(
-            name="Mirrorless Camera",
-            description="Featured item created individually",
-            quantity=1,
-            locationId=location.id,
+        featured_item = client.items.create_item(
+            ItemCreate(
+                name="Mirrorless Camera",
+                description="Featured item created individually",
+                quantity=1,
+                locationId=location.id,
+            )
         )
-    )
-    print(f"Created featured item: {featured_item.name} ({featured_item.id})")
+        if featured_item.id:
+            created_item_ids.append(featured_item.id)
+        print(f"Created featured item: {featured_item.name} ({featured_item.id})")
 
-    image = _tiny_png()
-    client.items.create_item_attachment(
-        featured_item.id,
-        file=image,
-        type="photo",
-        primary=True,
-        name="front.png",
-    )
-    client.items.create_item_attachment(
-        featured_item.id,
-        file=image,
-        type="photo",
-        primary=False,
-        name="rear.png",
-    )
-    print("Attached two images to the featured item")
+        image = _tiny_png()
+        client.items.create_item_attachment(
+            featured_item.id,
+            file=image,
+            type="photo",
+            primary=True,
+            name="front.png",
+        )
+        client.items.create_item_attachment(
+            featured_item.id,
+            file=image,
+            type="photo",
+            primary=False,
+            name="rear.png",
+        )
+        print("Attached two images to the featured item")
 
-    bulk_items = [
-        {"name": "Tripod", "description": "Carbon tripod", "quantity": "1"},
-        {"name": "Camera Bag", "description": "Weather resistant bag", "quantity": "2"},
-        {"name": "SD Card", "description": "128GB UHS-II", "quantity": "4"},
-    ]
+        # Show the ancestry path of the featured item (location → item).
+        path = client.items.get_item_path(featured_item.id)
+        print("Item path:")
+        for node in path:
+            print(f"  [{node.type}] {node.name} ({node.id})")
 
-    exported_csv = client.items.export_items()
-    headers = next(csv.reader([exported_csv.splitlines()[0]]))
-    out = io.StringIO()
-    writer = csv.DictWriter(out, fieldnames=headers)
-    writer.writeheader()
-    for item in bulk_items:
-        row = {header: "" for header in headers}
-        _set_first_key(row, ["HB.name"], item["name"])
-        _set_first_key(row, ["HB.description"], item["description"])
-        _set_first_key(row, ["HB.quantity", "HB.qty"], item["quantity"])
-        _set_first_key(row, ["HB.location", "HB.locationname"], location.name)
-        writer.writerow(row)
-    client.items.import_items(out.getvalue().encode("utf-8"))
-    print(f"Bulk-created {len(bulk_items)} items using import_items()")
+        # Duplicate the featured item and keep track of the copy for cleanup.
+        duplicate = client.items.duplicate_item(
+            featured_item.id,
+            DuplicateOptions(
+                copyAttachments=True,
+                copyCustomFields=True,
+                copyMaintenance=False,
+                copyPrefix="Copy of ",
+            ),
+        )
+        if duplicate.id:
+            created_item_ids.append(duplicate.id)
+        print(f"Duplicated item: {duplicate.name} ({duplicate.id})")
 
-    label_data = client.labelmaker.get_location_label(location.id, print=False)
-    output_file = Path.cwd() / f"{_safe_name(location_name)}_label.png"
-    output_file.write_bytes(label_data)
-    print(f"Saved location label to: {output_file}")
+        bulk_items = [
+            {"name": "Tripod", "description": "Carbon tripod", "quantity": "1"},
+            {"name": "Camera Bag", "description": "Weather resistant bag", "quantity": "2"},
+            {"name": "SD Card", "description": "128GB UHS-II", "quantity": "4"},
+        ]
+
+        exported_csv = client.items.export_items()
+        headers = next(csv.reader([exported_csv.splitlines()[0]]))
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=headers)
+        writer.writeheader()
+        for item in bulk_items:
+            row = {header: "" for header in headers}
+            _set_first_key(row, ["HB.name"], item["name"])
+            _set_first_key(row, ["HB.description"], item["description"])
+            _set_first_key(row, ["HB.quantity", "HB.qty"], item["quantity"])
+            _set_first_key(row, ["HB.location", "HB.locationname"], location.name)
+            writer.writerow(row)
+        client.items.import_items(out.getvalue().encode("utf-8"))
+        print(f"Bulk-created {len(bulk_items)} items using import_items()")
+
+        label_data = client.labelmaker.get_location_label(location.id, print=False)
+        output_file = Path.cwd() / f"{_safe_name(location_name)}_label.png"
+        output_file.write_bytes(label_data)
+        print(f"Saved location label to: {output_file}")
+
+    finally:
+        for item_id in created_item_ids:
+            client.items.delete_item(item_id)
+            print(f"Deleted item: {item_id}")
+
+        if created_location_id:
+            client.locations.delete_location(created_location_id)
+            print(f"Deleted location: {created_location_id}")
 
 
 if __name__ == "__main__":

@@ -27,6 +27,23 @@ def test_create_template(mocker, client: HomeboxClient):
     assert mock_request.call_args.kwargs["data"]["defaultTagIds"] == ["tag-1"]
 
 
+def test_create_template_serializes_template_field_type(mocker, client: HomeboxClient):
+    mock_request = mocker.patch.object(client, "_request", return_value={"id": "tmpl-1", "name": "Laptop"})
+    client.templates.create_template(
+        models.ItemTemplateCreate(
+            name="Laptop",
+            fields=[
+                models.TemplateField(
+                    name="Voltage",
+                    type=models.TemplateFieldType.TypeNumber,
+                    numberValue=230,
+                )
+            ],
+        )
+    )
+    assert mock_request.call_args.kwargs["data"]["fields"][0]["type"] == "number"
+
+
 def test_get_template(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "tmpl-1", "name": "Laptop"})
     result = client.templates.get_template("tmpl-1")

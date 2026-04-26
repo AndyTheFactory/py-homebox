@@ -128,9 +128,9 @@ for item in result.items or []:
 # Search for items by name
 result = client.items.query_all_items(q="laptop")
 
-# Filter by label and location
+# Filter by tag and location (preferred in v0.4.0)
 result = client.items.query_all_items(
-    labels=["label-uuid-1", "label-uuid-2"],
+    tags=["tag-uuid-1", "tag-uuid-2"],
     locations=["location-uuid-1"],
     page=1,
     pageSize=50,
@@ -306,7 +306,7 @@ me = client.users.get_user_self()
 print(me.name, me.email)
 
 # Update profile
-client.users.update_account(UserUpdate(name="Alice Smith"))
+client.users.update_account(UserUpdate(name="Alice Smith", email=me.email))
 
 # Change password
 client.users.change_password(ChangePassword(current="old", new="new-secret"))
