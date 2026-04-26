@@ -20,9 +20,10 @@ def test_query_all_items(mocker, client: HomeboxClient):
 
 
 def test_create_item(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
-    result = client.items.create_item(models.ItemCreate(name="Test Item"))
+    mock_request = mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
+    result = client.items.create_item(models.ItemCreate(name="Test Item", labelIds=["tag-1"]))
     assert result.name == "Test Item"
+    assert mock_request.call_args.kwargs["data"]["tagIds"] == ["tag-1"]
 
 
 def test_export_items(mocker, client: HomeboxClient):
@@ -50,9 +51,10 @@ def test_import_items(mocker, client: HomeboxClient):
 
 
 def test_get_item(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item"})
+    mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Test Item", "tags": []})
     result = client.items.get_item("1")
     assert result.name == "Test Item"
+    assert result.labels == []
 
 
 def test_update_item(mocker, client: HomeboxClient):

@@ -37,7 +37,7 @@ class GroupEdges(BaseModel):
         description="InvitationTokens holds the value of the invitation_tokens edge.",
     )
     items: Optional[List["Item"]] = Field(default=None, description="Items holds the value of the items edge.")  # ty: ignore[unresolved-reference]
-    labels: Optional[List["Label"]] = Field(default=None, description="Labels holds the value of the labels edge.")  # ty: ignore[unresolved-reference]
+    tags: Optional[List["Tag"]] = Field(default=None, description="Tags holds the value of the tags edge.")  # ty: ignore[unresolved-reference]
     locations: Optional[List["Location"]] = Field(  # ty: ignore[unresolved-reference]
         default=None, description="Locations holds the value of the locations edge."
     )
@@ -86,6 +86,7 @@ class GroupStatistics(BaseModel):
     )
     totalItemPrice: Optional[float] = None
     totalItems: Optional[int] = None
+    totalTags: Optional[int] = None
     totalLabels: Optional[int] = None
     totalLocations: Optional[int] = None
     totalUsers: Optional[int] = None

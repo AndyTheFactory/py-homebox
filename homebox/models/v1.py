@@ -49,6 +49,7 @@ class GroupInvitation(BaseModel):
         populate_by_name=True,
     )
     expiresAt: Optional[str] = None
+    id: Optional[str] = None
     token: Optional[str] = None
     uses: Optional[int] = None
 
@@ -61,6 +62,34 @@ class GroupInvitationCreate(BaseModel):
     )
     expiresAt: Optional[str] = None
     uses: Annotated[int, Field(strict=True, ge=1, le=100)]
+
+
+class GroupAcceptInvitationResponse(BaseModel):
+    """Response DTO returned after accepting a group invitation."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: Optional[str] = None
+    name: Optional[str] = None
+
+
+class GroupMemberAdd(BaseModel):
+    """Request payload for adding a user to the current group."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    userId: str
+
+
+class CreateRequest(BaseModel):
+    """Request payload for creating a new group."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
 
 
 class ItemAttachmentToken(BaseModel):
@@ -104,6 +133,17 @@ class TokenResponse(BaseModel):
     attachmentToken: Optional[str] = None
     expiresAt: Optional[str] = None
     token: Optional[str] = None
+
+
+class WipeInventoryOptions(BaseModel):
+    """Options for the wipe inventory action."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    wipeLocations: Optional[bool] = None
+    wipeMaintenance: Optional[bool] = None
+    wipeTags: Optional[bool] = None
 
 
 class Wrapped(BaseModel):

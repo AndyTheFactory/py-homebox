@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class Group(BaseModel):
@@ -31,10 +31,18 @@ class GroupStatistics(BaseModel):
     )
     totalItemPrice: Optional[float] = None
     totalItems: Optional[int] = None
+    totalTags: Optional[int] = None
     totalLabels: Optional[int] = None
     totalLocations: Optional[int] = None
     totalUsers: Optional[int] = None
     totalWithWarranty: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_legacy_total_labels(cls, data):
+        if isinstance(data, dict) and "totalLabels" not in data and "totalTags" in data:
+            data["totalLabels"] = data["totalTags"]
+        return data
 
 
 class GroupUpdate(BaseModel):

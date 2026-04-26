@@ -37,6 +37,7 @@ def test_client_sub_clients_present():
     assert client.assets is not None
     assert client.groups is not None
     assert client.items is not None
+    assert client.tags is not None
     assert client.labels is not None
     assert client.locations is not None
     assert client.maintenance is not None
@@ -50,6 +51,7 @@ def test_client_sub_clients_present():
 def test_models_importable():
     """Key model classes are importable from homebox.models."""
     assert models.ItemCreate is not None
+    assert models.TagCreate is not None
     assert models.LabelCreate is not None
     assert models.LocationCreate is not None
     assert models.LoginForm is not None

@@ -7,13 +7,13 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .attachment import Attachment
 from .group import Group
-from .labels import Label, LabelSummary
 from .locations import Location, LocationSummary
 from .maintenance import MaintenanceEntry
+from .tags import Tag, TagSummary
 from .types import ItemFieldType, ItemType
 
 
@@ -101,7 +101,7 @@ class ItemEdges(BaseModel):
     children: Optional[List[Item]] = Field(default=None, description="Children holds the value of the children edge.")
     fields: Optional[List[ItemField]] = Field(default=None, description="Fields holds the value of the fields edge.")
     group: Optional[Group] = Field(default=None, description="Group holds the value of the group edge.")
-    label: Optional[List[Label]] = Field(default=None, description="Label holds the value of the label edge.")
+    tag: Optional[List[Tag]] = Field(default=None, description="Tag holds the value of the tag edge.")
     location: Optional[Location] = Field(default=None, description="Location holds the value of the location edge.")
     maintenance_entries: Optional[List[MaintenanceEntry]] = Field(
         default=None,
@@ -211,6 +211,7 @@ class ItemCreate(BaseModel):
         populate_by_name=True,
     )
     description: Optional[str] = Field(default=None, max_length=1000)
+    tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
     locationId: Optional[str] = Field(default=None, description="Edges")
     name: str = Field(..., min_length=1, max_length=255)
@@ -225,6 +226,7 @@ class ItemPatch(BaseModel):
         populate_by_name=True,
     )
     id: Optional[str] = None
+    tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
     locationId: Optional[str] = None
     quantity: Optional[int] = None
@@ -242,6 +244,7 @@ class ItemUpdate(BaseModel):
     fields: Optional[List[ItemFieldUpdate]] = None
     id: Optional[str] = None
     insured: Optional[bool] = None
+    tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
     lifetimeWarranty: Optional[bool] = Field(default=None, description="Warranty")
     locationId: Optional[str] = Field(default=None, description="Edges")
@@ -277,7 +280,8 @@ class ItemSummary(BaseModel):
     id: Optional[str] = None
     imageId: Optional[str] = None
     insured: Optional[bool] = None
-    labels: Optional[List[LabelSummary]] = None
+    tags: Optional[List[TagSummary]] = None
+    labels: Optional[List[TagSummary]] = None
     location: Optional[LocationSummary] = Field(default=None, description="Edges")
     name: Optional[str] = None
     purchasePrice: Optional[float] = None
@@ -285,6 +289,13 @@ class ItemSummary(BaseModel):
     soldTime: Optional[str] = Field(default=None, description="Sale details")
     thumbnailId: Optional[str] = None
     updatedAt: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_legacy_labels(cls, data):
+        if isinstance(data, dict) and "labels" not in data and "tags" in data:
+            data["labels"] = data["tags"]
+        return data
 
 
 class ItemOut(BaseModel):
@@ -302,7 +313,8 @@ class ItemOut(BaseModel):
     id: Optional[str] = None
     imageId: Optional[str] = None
     insured: Optional[bool] = None
-    labels: Optional[List[LabelSummary]] = None
+    tags: Optional[List[TagSummary]] = None
+    labels: Optional[List[TagSummary]] = None
     lifetimeWarranty: Optional[bool] = Field(default=None, description="Warranty")
     location: Optional[LocationSummary] = Field(default=None, description="Edges")
     manufacturer: Optional[str] = None
@@ -324,6 +336,13 @@ class ItemOut(BaseModel):
     updatedAt: Optional[str] = None
     warrantyDetails: Optional[str] = None
     warrantyExpires: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_legacy_labels(cls, data):
+        if isinstance(data, dict) and "labels" not in data and "tags" in data:
+            data["labels"] = data["tags"]
+        return data
 
 
 class ItemPath(BaseModel):
