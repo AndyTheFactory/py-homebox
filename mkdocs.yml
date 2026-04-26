@@ -1,6 +1,6 @@
 site_name: py-homebox
 site_description: A Python client library for the Homebox REST API
-site_url: https://andythefactory.github.io/py-homebox/
+site_url: https://py-homebox.readthedocs.io/
 repo_url: https://github.com/AndyTheFactory/py-homebox
 repo_name: AndyTheFactory/py-homebox
 
