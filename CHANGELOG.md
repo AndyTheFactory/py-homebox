@@ -29,6 +29,9 @@ Upgrade the client to Homebox API v0.23.0.
 	* `client.labels.*` remains available and transparently maps to `/v1/tags` endpoints
 	* legacy model names (`LabelCreate`, `LabelOut`, `LabelSummary`, `TemplateLabelSummary`) remain importable as aliases
 	* legacy fields (`labelIds`, `defaultLabelIds`, `labels`, `defaultLabels`, `totalLabels`) continue to work via compatibility mapping
+* added new example scripts demonstrating usage of the new group and tag endpoints:
+	* `examples/manage_groups.py`
+	* `examples/manage_tags.py`
 
 # v 0.2.0
 
@@ -49,6 +52,7 @@ Upgrade the client to Homebox API v0.22.0.
 	* `oidcIssuer` and `oidcSubject` on `UserOut`
 	* item-template request/response models
 * validated that previously mapped endpoints remain compatible through the test suite
+* added example script `examples/manage_templates.py` demonstrating usage of the new template endpoints
 
 # v 0.1.0
 
