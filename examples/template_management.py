@@ -24,6 +24,7 @@ from homebox.models import (
     LabelCreate,
     LocationCreate,
     TemplateField,
+    TemplateFieldType,
 )
 
 
@@ -112,7 +113,9 @@ def main() -> None:
                 includePurchaseFields=True,
                 includeWarrantyFields=True,
                 includeSoldFields=False,
-                fields=[TemplateField(name="Asset Owner", type="text", textValue="IT Department")],
+                fields=[
+                    TemplateField(name="Asset Owner", type=TemplateFieldType.TypeText.value, textValue="IT Department")
+                ],
             )
         )
         created_template_id = template.id
@@ -141,7 +144,9 @@ def main() -> None:
                 includePurchaseFields=True,
                 includeWarrantyFields=True,
                 includeSoldFields=False,
-                fields=[TemplateField(name="Asset Owner", type="text", textValue="Engineering")],
+                fields=[
+                    TemplateField(name="Asset Owner", type=TemplateFieldType.TypeText.value, textValue="Engineering")
+                ],
             ),
         )
         print(f"Updated template name: {updated.name}")

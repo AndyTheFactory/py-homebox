@@ -1,3 +1,21 @@
+# v 0.4.0
+
+Upgrade the client to Homebox API v0.24.0.
+
+* aligned the client with v24 item/template response compatibility:
+	* `GET /v1/items/{id}`
+	* `PUT /v1/items/{id}`
+	* `PATCH /v1/items/{id}`
+	* `POST /v1/items/{id}/attachments`
+	* `PUT /v1/items/{id}/attachments/{attachment_id}`
+	* `POST /v1/items/{id}/duplicate`
+	* `POST /v1/templates/{id}/create-item`
+* added response unwrapping for wrapped payload shapes (`item` and `data`) on affected endpoints
+* added non-JSON success response fallback in the HTTP request layer for improved compatibility
+* kept backward compatibility for existing method signatures and return models
+* expanded template-field typing support for v24 (`text`, `number`, `boolean`, `time`) via `TemplateFieldType`
+* added compatibility tests for wrapped v24 response shapes and attachment update fallback behavior
+
 # v 0.3.0
 
 Upgrade the client to Homebox API v0.23.0.

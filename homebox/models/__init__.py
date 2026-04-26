@@ -39,7 +39,15 @@ from .templates import (
     TemplateLocationSummary,
     TemplateTagSummary,
 )
-from .types import AttachmentType, AuthRole, ItemFieldType, ItemType, MaintenanceFilterStatus, UserRole
+from .types import (
+    AttachmentType,
+    AuthRole,
+    ItemFieldType,
+    ItemType,
+    MaintenanceFilterStatus,
+    TemplateFieldType,
+    UserRole,
+)
 from .users import UserOut, UserSummary, UserUpdate
 from .v1 import (
     ActionAmountResult,
@@ -123,6 +131,7 @@ __all__ = [
     "TemplateLabelSummary",
     "TemplateTagSummary",
     "TemplateLocationSummary",
+    "TemplateFieldType",
     "TokenResponse",
     "TotalsByOrganizer",
     "TreeItem",

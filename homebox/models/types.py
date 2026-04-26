@@ -35,6 +35,15 @@ class ItemFieldType(Enum):
     TypeTime = "time"
 
 
+class TemplateFieldType(Enum):
+    """Enumeration of data types available for template custom fields."""
+
+    TypeText = "text"
+    TypeNumber = "number"
+    TypeBoolean = "boolean"
+    TypeTime = "time"
+
+
 class ItemType(Enum):
     """Enumeration used to distinguish item-path node types."""
 
@@ -64,5 +73,6 @@ __all__ = [
     "ItemFieldType",
     "ItemType",
     "MaintenanceFilterStatus",
+    "TemplateFieldType",
     "UserRole",
 ]
