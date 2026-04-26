@@ -1288,7 +1288,7 @@ class TemplatesClient:
 
     def create_template(self, data: ItemTemplateCreate) -> ItemTemplateOut:
         """Create a new item template."""
-        payload = self._normalize_template_payload(data.model_dump(exclude_none=True))
+        payload = self._normalize_template_payload(data.model_dump(mode="json", exclude_none=True))
         response = self.client._request("post", "/v1/templates", data=payload)
         return ItemTemplateOut(**self._unwrap_template_response(response))
 
@@ -1299,7 +1299,7 @@ class TemplatesClient:
 
     def update_template(self, id: str, data: ItemTemplateUpdate) -> ItemTemplateOut:
         """Update an existing item template."""
-        payload = self._normalize_template_payload(data.model_dump(exclude_none=True))
+        payload = self._normalize_template_payload(data.model_dump(mode="json", exclude_none=True))
         response = self.client._request("put", f"/v1/templates/{id}", data=payload)
         return ItemTemplateOut(**self._unwrap_template_response(response))
 

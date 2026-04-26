@@ -67,17 +67,31 @@ def main() -> None:
         raise RuntimeError("No locations found. Create at least one location before running this example.")
 
     location_id = locations[0].id
-    created_item = client.templates.create_item_from_template(
-        template_id,
-        ItemTemplateCreateItemRequest(
-            name=f"Template Item {ts}",
-            locationId=location_id,
-            quantity=1,
-            description="Created from existing template via API",
-        ),
-    )
+    created_item_id: str | None = None
 
-    print(f"Created item from template {template_id}: {created_item.name} ({created_item.id})")
+    try:
+        created_item = client.templates.create_item_from_template(
+            template_id,
+            ItemTemplateCreateItemRequest(
+                name=f"Template Item {ts}",
+                locationId=location_id,
+                quantity=1,
+                description="Created from existing template via API",
+            ),
+        )
+        created_item_id = created_item.id
+        print(f"Created item from template {template_id}: {created_item.name} ({created_item.id})")
+
+        # Show the ancestry path of the new item (location → item).
+        path = client.items.get_item_path(created_item.id)
+        print("Item path:")
+        for node in path:
+            print(f"  [{node.type}] {node.name} ({node.id})")
+
+    finally:
+        if created_item_id:
+            client.items.delete_item(created_item_id)
+            print(f"Deleted created item: {created_item_id}")
 
 
 if __name__ == "__main__":
