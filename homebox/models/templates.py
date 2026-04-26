@@ -141,6 +141,7 @@ class ItemTemplateOut(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_labels(cls, data):
+        """Backfill ``defaultLabels`` from ``defaultTags`` for legacy payloads."""
         if isinstance(data, dict) and "defaultLabels" not in data and "defaultTags" in data:
             data["defaultLabels"] = data["defaultTags"]
         return data

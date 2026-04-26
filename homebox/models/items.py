@@ -293,6 +293,7 @@ class ItemSummary(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_labels(cls, data):
+        """Backfill ``labels`` from ``tags`` when only tag data is returned."""
         if isinstance(data, dict) and "labels" not in data and "tags" in data:
             data["labels"] = data["tags"]
         return data
@@ -340,6 +341,7 @@ class ItemOut(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_labels(cls, data):
+        """Backfill ``labels`` from ``tags`` when only tag data is returned."""
         if isinstance(data, dict) and "labels" not in data and "tags" in data:
             data["labels"] = data["tags"]
         return data
