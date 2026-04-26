@@ -1,6 +1,6 @@
 # v 0.2.0
 
-Upgrade the client to Homebox API v0.22.0 (`swagger_v22.json`).
+Upgrade the client to Homebox API v0.22.0.
 
 * added support for item template endpoints:
 	* `GET /v1/templates`

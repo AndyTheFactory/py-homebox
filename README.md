@@ -33,8 +33,10 @@ uv add homebox
 ---
 
 ## Compatibility
-
 version 0.2.0 is compatible with Homebox v0.22.0 API.
+
+version 0.1.0 is compatible with Homebox v0.21.0 API.
+
 For newer additions to the Homebox API, we will release updates to this client library.
 
 ---
