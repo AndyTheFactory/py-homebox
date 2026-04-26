@@ -97,10 +97,20 @@ class UserUpdate(BaseModel):
     name: str
 
 
+class UserSettings(BaseModel):
+    """Arbitrary key/value settings object for the current user."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        extra="allow",
+    )
+
+
 User.model_rebuild(raise_errors=False)
 
 
 __all__ = [
+    "UserSettings",
     "UserSummary",
     "UserOut",
     "UserUpdate",

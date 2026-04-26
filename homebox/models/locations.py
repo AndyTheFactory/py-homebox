@@ -77,7 +77,7 @@ class LocationOutCount(BaseModel):
     createdAt: Optional[str] = None
     description: Optional[str] = None
     id: Optional[str] = None
-    itemCount: Optional[int] = None
+    itemCount: Optional[float] = None
     name: Optional[str] = None
     updatedAt: Optional[str] = None
 

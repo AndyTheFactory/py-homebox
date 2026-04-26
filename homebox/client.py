@@ -60,6 +60,7 @@ from homebox.models import (
     TreeItem,
     UserOut,
     UserRegistration,
+    UserSettings,
     UserSummary,
     UserUpdate,
     ValueOverTime,
@@ -304,6 +305,7 @@ class ActionsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the actions sub-client with the shared root client."""
         self.client = client
 
     def create_missing_thumbnails(self) -> ActionAmountResult:
@@ -359,6 +361,7 @@ class AssetsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the assets sub-client with the shared root client."""
         self.client = client
 
     def get_item_by_asset_id(self, id: str) -> PaginationResultRepoItemSummary:
@@ -381,6 +384,7 @@ class GroupsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the groups sub-client with the shared root client."""
         self.client = client
 
     def get_group(self) -> Group:
@@ -510,6 +514,7 @@ class ItemsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the items sub-client with the shared root client."""
         self.client = client
 
     @staticmethod
@@ -826,6 +831,7 @@ class TagsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the tags sub-client with the shared root client."""
         self.client = client
 
     def get_all_tags(self) -> list[TagOut]:
@@ -888,18 +894,23 @@ class LabelsClient(TagsClient):
     """Backward-compatible alias wrapper for ``TagsClient``."""
 
     def get_all_labels(self) -> list[LabelOut]:
+        """Return all tags mapped to backward-compatible label models."""
         return [LabelOut(**item.model_dump()) for item in self.get_all_tags()]
 
     def create_label(self, data: LabelCreate) -> LabelSummary:
+        """Create a label using the tag endpoint and return a label summary."""
         return LabelSummary(**self.create_tag(TagCreate(**data.model_dump(exclude_none=True))).model_dump())
 
     def get_label(self, id: str) -> LabelOut:
+        """Return a single tag mapped to the backward-compatible label model."""
         return LabelOut(**self.get_tag(id).model_dump())
 
     def update_label(self, id: str, data: LabelOut) -> LabelOut:
+        """Update a label by proxying the request through the tag endpoint."""
         return LabelOut(**self.update_tag(id, TagOut(**data.model_dump(exclude_none=True))).model_dump())
 
     def delete_label(self, id: str):
+        """Delete a label by proxying the request through the tag endpoint."""
         self.delete_tag(id)
 
 
@@ -910,6 +921,7 @@ class LocationsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the locations sub-client with the shared root client."""
         self.client = client
 
     def get_all_locations(self, filterChildren: bool | None = None) -> list[LocationOutCount]:
@@ -999,6 +1011,7 @@ class MaintenanceClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the maintenance sub-client with the shared root client."""
         self.client = client
 
     def query_all_maintenance(self, status: MaintenanceFilterStatus | None = None) -> list[MaintenanceEntryWithDetails]:
@@ -1047,6 +1060,7 @@ class NotifiersClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the notifiers sub-client with the shared root client."""
         self.client = client
 
     def get_notifiers(self) -> list[NotifierOut]:
@@ -1111,6 +1125,7 @@ class UsersClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the users sub-client with the shared root client."""
         self.client = client
 
     def change_password(self, data: ChangePassword):
@@ -1211,6 +1226,30 @@ class UsersClient:
         payload = response.get("item", response)
         return UserUpdate(**payload)
 
+    def get_user_settings(self) -> UserSettings:
+        """Return settings for the currently authenticated user.
+
+        Returns:
+            UserSettings: Arbitrary per-user settings key/value object.
+        """
+        response = self.client._request("get", "/v1/users/self/settings")
+        payload = response.get("item", response)
+        return UserSettings(**payload)
+
+    def update_user_settings(self, data: UserSettings | dict[str, Any]) -> UserSettings:
+        """Update settings for the currently authenticated user.
+
+        Args:
+            data: Arbitrary key/value settings payload.
+
+        Returns:
+            UserSettings: Updated user settings returned by the server.
+        """
+        payload = data.model_dump(exclude_none=True) if isinstance(data, UserSettings) else data
+        response = self.client._request("put", "/v1/users/self/settings", data=payload)
+        wrapped = response.get("item", response)
+        return UserSettings(**wrapped)
+
     def delete_account(self):
         """Permanently delete the current user's account.
 
@@ -1227,6 +1266,7 @@ class ReportingClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the reporting sub-client with the shared root client."""
         self.client = client
 
     def export_bill_of_materials(self) -> str:
@@ -1245,6 +1285,7 @@ class TemplatesClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the templates sub-client with the shared root client."""
         self.client = client
 
     @staticmethod
@@ -1321,6 +1362,7 @@ class LabelMakerClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the labelmaker sub-client with the shared root client."""
         self.client = client
 
     def get_asset_label(self, id: str, print: bool | None = None) -> bytes:
@@ -1337,7 +1379,7 @@ class LabelMakerClient:
         params = {}
         if print:
             params["print"] = print
-        return self.client._get(f"/v1/labelmaker/assets/{id}", params=params, binary=True)
+        return self.client._get(f"/v1/labelmaker/asset/{id}", params=params, binary=True)
 
     def get_item_label(self, id: str, print: bool | None = None) -> bytes:
         """Return a printable label for an item.
@@ -1379,6 +1421,7 @@ class ProductsClient:
     """
 
     def __init__(self, client: HomeboxClient):
+        """Initialise the products sub-client with the shared root client."""
         self.client = client
 
     def search_ean_from_barcode(self, data: str | None = None) -> list[BarcodeProduct]:

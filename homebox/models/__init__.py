@@ -48,7 +48,7 @@ from .types import (
     TemplateFieldType,
     UserRole,
 )
-from .users import UserOut, UserSummary, UserUpdate
+from .users import UserOut, UserSettings, UserSummary, UserUpdate
 from .v1 import (
     ActionAmountResult,
     APISummary,
@@ -136,6 +136,7 @@ __all__ = [
     "TotalsByOrganizer",
     "TreeItem",
     "UserOut",
+    "UserSettings",
     "UserSummary",
     "UserRegistration",
     "UserRole",

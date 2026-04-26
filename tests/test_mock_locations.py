@@ -44,3 +44,11 @@ def test_update_location(mocker, client: HomeboxClient):
 def test_delete_location(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value=None)
     client.locations.delete_location("1")
+
+
+def test_get_all_locations_accepts_float_item_count(mocker, client: HomeboxClient):
+    mocker.patch.object(
+        client, "_request", return_value={"data": [{"id": "1", "name": "Test Location", "itemCount": 2.5}]}
+    )
+    result = client.locations.get_all_locations()
+    assert result[0].itemCount == 2.5

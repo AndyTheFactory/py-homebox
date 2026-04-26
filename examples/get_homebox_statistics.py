@@ -57,12 +57,16 @@ def main() -> None:
     client = _build_client()
 
     app = client.application_info()
-    # currency endpoint is currently broken, so we skip it here
+    currency = None
+
+    # The currency endpoint is currently broken, raises  404 error
     # currency = client.currency()
+
     group_stats = client.groups.get_group_statistics()
-    # /v1/groups/statistics/tags returns null
-    # label_stats = client.groups.get_label_statistics()
-    label_stats = []
+    tag_stats = []
+    # The tag statistics endpoint is broken, returns None
+    # tag_stats = client.groups.get_tag_statistics()
+
     location_stats = client.groups.get_location_statistics()
 
     end = datetime.now(UTC).date()
@@ -73,7 +77,8 @@ def main() -> None:
     print(f"Title: {app.title}")
     print(f"Version: {app.build.version if app.build else 'n/a'}")
     print(f"Health: {'ok' if app.health else 'not healthy'}")
-    # print(f"Currency: {currency.code} ({currency.symbol})")
+    if currency:
+        print(f"Currency: {currency.code} ({currency.symbol})")
 
     print("\n=== Group Totals ===")
     print(f"Items: {group_stats.totalItems}")
@@ -83,8 +88,8 @@ def main() -> None:
     print(f"Items with warranty: {group_stats.totalWithWarranty}")
     print(f"Total item value: {group_stats.totalItemPrice}")
 
-    print("\n=== Value by Label ===")
-    for stat in sorted(label_stats, key=lambda x: x.total or 0, reverse=True):
+    print("\n=== Value by Tag ===")
+    for stat in sorted(tag_stats, key=lambda x: x.total or 0, reverse=True):
         print(f"- {stat.name}: {stat.total}")
 
     print("\n=== Value by Location ===")

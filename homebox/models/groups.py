@@ -40,6 +40,7 @@ class GroupStatistics(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_total_labels(cls, data):
+        """Backfill ``totalLabels`` from ``totalTags`` for legacy payloads."""
         if isinstance(data, dict) and "totalLabels" not in data and "totalTags" in data:
             data["totalLabels"] = data["totalTags"]
         return data

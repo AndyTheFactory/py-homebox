@@ -98,3 +98,21 @@ def test_template_field_supports_v24_types_and_values():
     )
     assert field.type == models.TemplateFieldType.TypeTime
     assert field.timeValue == "2026-01-01T00:00:00Z"
+
+
+def test_template_default_quantity_accepts_float(mocker, client: HomeboxClient):
+    mock_request = mocker.patch.object(client, "_request", return_value={"id": "tmpl-1", "name": "Laptop"})
+    client.templates.create_template(models.ItemTemplateCreate(name="Laptop", defaultQuantity=1.5))
+    assert mock_request.call_args.kwargs["data"]["defaultQuantity"] == 1.5
+
+
+def test_create_item_from_template_accepts_float_quantity(mocker, client: HomeboxClient):
+    mock_request = mocker.patch.object(
+        client, "_request", return_value={"id": "item-1", "name": "Created", "quantity": 3.75}
+    )
+    result = client.templates.create_item_from_template(
+        "tmpl-1",
+        models.ItemTemplateCreateItemRequest(name="Created", locationId="loc-1", quantity=3.75),
+    )
+    assert result.quantity == 3.75
+    assert mock_request.call_args.kwargs["data"]["quantity"] == 3.75

@@ -72,7 +72,7 @@ class ItemTemplateCreate(BaseModel):
     defaultManufacturer: Optional[str] = Field(default=None, max_length=255)
     defaultModelNumber: Optional[str] = Field(default=None, max_length=255)
     defaultName: Optional[str] = Field(default=None, max_length=255)
-    defaultQuantity: Optional[int] = None
+    defaultQuantity: Optional[float] = None
     defaultWarrantyDetails: Optional[str] = Field(default=None, max_length=1000)
     description: Optional[str] = Field(default=None, max_length=1000)
     fields: Optional[List[TemplateField]] = None
@@ -98,7 +98,7 @@ class ItemTemplateUpdate(BaseModel):
     defaultManufacturer: Optional[str] = Field(default=None, max_length=255)
     defaultModelNumber: Optional[str] = Field(default=None, max_length=255)
     defaultName: Optional[str] = Field(default=None, max_length=255)
-    defaultQuantity: Optional[int] = None
+    defaultQuantity: Optional[float] = None
     defaultWarrantyDetails: Optional[str] = Field(default=None, max_length=1000)
     description: Optional[str] = Field(default=None, max_length=1000)
     fields: Optional[List[TemplateField]] = None
@@ -126,7 +126,7 @@ class ItemTemplateOut(BaseModel):
     defaultManufacturer: Optional[str] = None
     defaultModelNumber: Optional[str] = None
     defaultName: Optional[str] = None
-    defaultQuantity: Optional[int] = None
+    defaultQuantity: Optional[float] = None
     defaultWarrantyDetails: Optional[str] = None
     description: Optional[str] = None
     fields: Optional[List[TemplateField]] = None
@@ -141,6 +141,7 @@ class ItemTemplateOut(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_labels(cls, data):
+        """Backfill ``defaultLabels`` from ``defaultTags`` for legacy payloads."""
         if isinstance(data, dict) and "defaultLabels" not in data and "defaultTags" in data:
             data["defaultLabels"] = data["defaultTags"]
         return data
@@ -157,7 +158,7 @@ class ItemTemplateCreateItemRequest(BaseModel):
     labelIds: Optional[List[str]] = None
     locationId: str
     name: str = Field(..., min_length=1, max_length=255)
-    quantity: Optional[int] = None
+    quantity: Optional[float] = None
 
 
 __all__ = [

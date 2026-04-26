@@ -85,3 +85,24 @@ def test_update_account(mocker, client: HomeboxClient):
 def test_delete_account(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value=None)
     client.users.delete_account()
+
+
+def test_get_user_settings(mocker, client: HomeboxClient):
+    mocker.patch.object(client, "_request", return_value={"item": {"theme": "dark", "dashboard": {"compact": True}}})
+    result = client.users.get_user_settings()
+    assert result.model_dump()["theme"] == "dark"
+    assert result.model_dump()["dashboard"]["compact"] is True
+
+
+def test_update_user_settings_with_model(mocker, client: HomeboxClient):
+    mock_request = mocker.patch.object(client, "_request", return_value={"item": {"theme": "light"}})
+    result = client.users.update_user_settings(models.UserSettings(theme="light"))
+    assert result.model_dump()["theme"] == "light"
+    assert mock_request.call_args.kwargs["data"]["theme"] == "light"
+
+
+def test_update_user_settings_with_dict(mocker, client: HomeboxClient):
+    mock_request = mocker.patch.object(client, "_request", return_value={"item": {"timezone": "UTC"}})
+    result = client.users.update_user_settings({"timezone": "UTC"})
+    assert result.model_dump()["timezone"] == "UTC"
+    assert mock_request.call_args.kwargs["data"]["timezone"] == "UTC"
