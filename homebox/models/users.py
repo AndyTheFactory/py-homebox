@@ -62,7 +62,9 @@ class UserOut(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    defaultGroupId: Optional[str] = None
     email: Optional[str] = None
+    groupIds: Optional[list[str]] = None
     groupId: Optional[str] = None
     groupName: Optional[str] = None
     id: Optional[str] = None
@@ -73,20 +75,33 @@ class UserOut(BaseModel):
     oidcSubject: Optional[str] = None
 
 
+class UserSummary(BaseModel):
+    """API DTO for lightweight user details in group member listings."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    email: Optional[str] = None
+    id: Optional[str] = None
+    isOwner: Optional[bool] = None
+    name: Optional[str] = None
+
+
 class UserUpdate(BaseModel):
     """Request payload for updating the current user's profile."""
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    email: Optional[str] = None
-    name: Optional[str] = None
+    email: str
+    name: str
 
 
 User.model_rebuild(raise_errors=False)
 
 
 __all__ = [
+    "UserSummary",
     "UserOut",
     "UserUpdate",
 ]

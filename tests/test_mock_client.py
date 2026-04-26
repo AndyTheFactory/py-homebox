@@ -47,6 +47,7 @@ def test_client_sub_clients_initialized(client):
     assert client.assets is not None
     assert client.groups is not None
     assert client.items is not None
+    assert client.tags is not None
     assert client.labels is not None
     assert client.locations is not None
     assert client.maintenance is not None
@@ -203,7 +204,7 @@ def test_application_info(client):
 
 
 def test_query_all_items_with_all_params(mocker, client):
-    mocker.patch.object(
+    mock_request = mocker.patch.object(
         client,
         "_request",
         return_value={"items": [], "page": 2, "pageSize": 20, "total": 0},
@@ -218,6 +219,7 @@ def test_query_all_items_with_all_params(mocker, client):
     )
     assert result.page == 2
     assert result.pageSize == 20
+    assert mock_request.call_args.kwargs["params"]["tags"] == ["label1"]
 
 
 def test_query_all_items_empty_result(mocker, client):
@@ -324,9 +326,10 @@ def test_get_purchase_price_statistics_with_both(mocker, client):
 
 
 def test_get_label_statistics_empty(mocker, client):
-    mocker.patch.object(client, "_request", return_value={"data": []})
+    mock_request = mocker.patch.object(client, "_request", return_value={"data": []})
     result = client.groups.get_label_statistics()
     assert result == []
+    assert mock_request.call_args.args[1] == "/v1/groups/statistics/tags"
 
 
 def test_get_location_statistics_empty(mocker, client):

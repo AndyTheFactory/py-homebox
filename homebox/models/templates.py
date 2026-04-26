@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class TemplateField(BaseModel):
@@ -19,8 +19,8 @@ class TemplateField(BaseModel):
     type: Optional[str] = None
 
 
-class TemplateLabelSummary(BaseModel):
-    """Minimal label representation embedded in item templates."""
+class TemplateTagSummary(BaseModel):
+    """Minimal tag representation embedded in item templates."""
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -60,6 +60,7 @@ class ItemTemplateCreate(BaseModel):
     )
     defaultDescription: Optional[str] = Field(default=None, max_length=1000)
     defaultInsured: Optional[bool] = None
+    defaultTagIds: Optional[List[str]] = None
     defaultLabelIds: Optional[List[str]] = None
     defaultLifetimeWarranty: Optional[bool] = None
     defaultLocationId: Optional[str] = None
@@ -85,6 +86,7 @@ class ItemTemplateUpdate(BaseModel):
     )
     defaultDescription: Optional[str] = Field(default=None, max_length=1000)
     defaultInsured: Optional[bool] = None
+    defaultTagIds: Optional[List[str]] = None
     defaultLabelIds: Optional[List[str]] = None
     defaultLifetimeWarranty: Optional[bool] = None
     defaultLocationId: Optional[str] = None
@@ -112,7 +114,8 @@ class ItemTemplateOut(BaseModel):
     createdAt: Optional[str] = None
     defaultDescription: Optional[str] = None
     defaultInsured: Optional[bool] = None
-    defaultLabels: Optional[List[TemplateLabelSummary]] = None
+    defaultTags: Optional[List[TemplateTagSummary]] = None
+    defaultLabels: Optional[List[TemplateTagSummary]] = None
     defaultLifetimeWarranty: Optional[bool] = None
     defaultLocation: Optional[TemplateLocationSummary] = None
     defaultManufacturer: Optional[str] = None
@@ -130,6 +133,13 @@ class ItemTemplateOut(BaseModel):
     notes: Optional[str] = None
     updatedAt: Optional[str] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_legacy_labels(cls, data):
+        if isinstance(data, dict) and "defaultLabels" not in data and "defaultTags" in data:
+            data["defaultLabels"] = data["defaultTags"]
+        return data
+
 
 class ItemTemplateCreateItemRequest(BaseModel):
     """Request payload for creating an item from a template."""
@@ -138,6 +148,7 @@ class ItemTemplateCreateItemRequest(BaseModel):
         populate_by_name=True,
     )
     description: Optional[str] = Field(default=None, max_length=1000)
+    tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
     locationId: str
     name: str = Field(..., min_length=1, max_length=255)
@@ -151,6 +162,8 @@ __all__ = [
     "ItemTemplateSummary",
     "ItemTemplateUpdate",
     "TemplateField",
-    "TemplateLabelSummary",
+    "TemplateTagSummary",
     "TemplateLocationSummary",
 ]
+
+TemplateLabelSummary = TemplateTagSummary

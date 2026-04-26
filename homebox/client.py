@@ -12,11 +12,14 @@ from homebox.models import (
     APISummary,
     BarcodeProduct,
     ChangePassword,
+    CreateRequest,
     Currency,
     DuplicateOptions,
     Group,
+    GroupAcceptInvitationResponse,
     GroupInvitation,
     GroupInvitationCreate,
+    GroupMemberAdd,
     GroupStatistics,
     GroupUpdate,
     ItemAttachmentUpdate,
@@ -49,13 +52,18 @@ from homebox.models import (
     NotifierOut,
     NotifierUpdate,
     PaginationResultRepoItemSummary,
+    TagCreate,
+    TagOut,
+    TagSummary,
     TokenResponse,
     TotalsByOrganizer,
     TreeItem,
     UserOut,
     UserRegistration,
+    UserSummary,
     UserUpdate,
     ValueOverTime,
+    WipeInventoryOptions,
 )
 
 
@@ -120,6 +128,7 @@ class HomeboxClient:
         self.assets = AssetsClient(self)
         self.groups = GroupsClient(self)
         self.items = ItemsClient(self)
+        self.tags = TagsClient(self)
         self.labels = LabelsClient(self)
         self.locations = LocationsClient(self)
         self.maintenance = MaintenanceClient(self)
@@ -329,6 +338,11 @@ class ActionsClient:
         """
         return ActionAmountResult(**self.client._request("post", "/v1/actions/zero-item-time-fields"))
 
+    def wipe_inventory(self, options: WipeInventoryOptions | None = None) -> ActionAmountResult:
+        """Delete all items in inventory, with optional related-data cleanup flags."""
+        payload = options.model_dump(exclude_none=True) if options else {}
+        return ActionAmountResult(**self.client._request("post", "/v1/actions/wipe-inventory", data=payload))
+
 
 class AssetsClient:
     """Sub-client for asset-ID based item lookup.
@@ -380,6 +394,19 @@ class GroupsClient:
         """
         return Group(**self.client._request("put", "/v1/groups", data=data.model_dump()))
 
+    def create_group(self, data: CreateRequest) -> Group:
+        """Create a new group owned by the current user."""
+        return Group(**self.client._request("post", "/v1/groups", data=data.model_dump(exclude_none=True)))
+
+    def delete_group(self):
+        """Delete the current user's active group."""
+        self.client._request("delete", "/v1/groups")
+
+    def get_all_groups(self) -> list[Group]:
+        """Return all groups available to the authenticated user."""
+        data = self.client._request("get", "/v1/groups/all")
+        return [Group(**item) for item in data.get("data", [])]
+
     def create_group_invitation(self, data: GroupInvitationCreate) -> GroupInvitation:
         """Create an invitation token that allows new users to join the group.
 
@@ -392,6 +419,32 @@ class GroupsClient:
         """
         return GroupInvitation(**self.client._request("post", "/v1/groups/invitations", data=data.model_dump()))
 
+    def get_group_invitations(self) -> list[GroupInvitation]:
+        """Return all invitation tokens for the current group."""
+        data = self.client._request("get", "/v1/groups/invitations")
+        return [GroupInvitation(**item) for item in data.get("data", [])]
+
+    def accept_group_invitation(self, id: str) -> GroupAcceptInvitationResponse:
+        """Accept a group invitation token and join that group."""
+        return GroupAcceptInvitationResponse(**self.client._request("post", f"/v1/groups/invitations/{id}"))
+
+    def delete_group_invitation(self, id: str):
+        """Delete an existing invitation token by invitation ID."""
+        self.client._request("delete", f"/v1/groups/invitations/{id}")
+
+    def get_group_members(self) -> list[UserSummary]:
+        """Return all users in the current group."""
+        data = self.client._request("get", "/v1/groups/members")
+        return [UserSummary(**item) for item in data.get("data", [])]
+
+    def add_group_member(self, data: GroupMemberAdd):
+        """Add an existing user to the current group."""
+        self.client._request("post", "/v1/groups/members", data=data.model_dump(exclude_none=True))
+
+    def remove_group_member(self, user_id: str):
+        """Remove a user from the current group by user ID."""
+        self.client._request("delete", f"/v1/groups/members/{user_id}")
+
     def get_group_statistics(self) -> GroupStatistics:
         """Return aggregate statistics for the current group.
 
@@ -401,15 +454,14 @@ class GroupsClient:
         """
         return GroupStatistics(**self.client._request("get", "/v1/groups/statistics"))
 
-    def get_label_statistics(self) -> list[TotalsByOrganizer]:
-        """Return the total item value grouped by label.
-
-        Returns:
-            list[TotalsByOrganizer]: One entry per label with the label's ID,
-                name, and aggregated total value.
-        """
-        data = self.client._request("get", "/v1/groups/statistics/labels")
+    def get_tag_statistics(self) -> list[TotalsByOrganizer]:
+        """Return the total item value grouped by tag."""
+        data = self.client._request("get", "/v1/groups/statistics/tags")
         return [TotalsByOrganizer(**item) for item in data["data"]]
+
+    def get_label_statistics(self) -> list[TotalsByOrganizer]:
+        """Backward-compatible alias for :meth:`get_tag_statistics`."""
+        return self.get_tag_statistics()
 
     def get_location_statistics(self) -> list[TotalsByOrganizer]:
         """Return the total item value grouped by location.
@@ -452,11 +504,21 @@ class ItemsClient:
     def __init__(self, client: HomeboxClient):
         self.client = client
 
+    @staticmethod
+    def _normalize_tag_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        """Map legacy label keys to v23 tag keys for compatibility."""
+        if "labelIds" in payload and "tagIds" not in payload:
+            payload["tagIds"] = payload.pop("labelIds")
+        else:
+            payload.pop("labelIds", None)
+        return payload
+
     def query_all_items(
         self,
         q: str | None = None,
         page: int | None = None,
         pageSize: int | None = None,
+        tags: list[str] | None = None,
         labels: list[str] | None = None,
         locations: list[str] | None = None,
         parentIds: list[str] | None = None,
@@ -467,7 +529,8 @@ class ItemsClient:
             q: Free-text search string.
             page: Page number (1-based).
             pageSize: Number of items per page.
-            labels: Filter to items that carry any of the given label IDs.
+            tags: Filter to items that carry any of the given tag IDs.
+            labels: Backward-compatible alias for ``tags``.
             locations: Filter to items stored at any of the given location IDs.
             parentIds: Filter to items that are children of the given item IDs.
 
@@ -482,8 +545,9 @@ class ItemsClient:
             params["page"] = page
         if pageSize:
             params["pageSize"] = pageSize
-        if labels:
-            params["labels"] = labels
+        tag_filters = tags if tags is not None else labels
+        if tag_filters:
+            params["tags"] = tag_filters
         if locations:
             params["locations"] = locations
         if parentIds:
@@ -501,7 +565,8 @@ class ItemsClient:
         Returns:
             ItemSummary: Summary representation of the newly created item.
         """
-        return ItemSummary(**self.client._request("post", "/v1/items", data=data.model_dump()))
+        payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
+        return ItemSummary(**self.client._request("post", "/v1/items", data=payload))
 
     def export_items(self) -> str:
         """Export all items as a CSV document.
@@ -564,7 +629,8 @@ class ItemsClient:
         Returns:
             ItemOut: Updated full item representation.
         """
-        return ItemOut(**self.client._request("put", f"/v1/items/{id}", data=data.model_dump()))
+        payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
+        return ItemOut(**self.client._request("put", f"/v1/items/{id}", data=payload))
 
     def delete_item(self, id: str):
         """Permanently delete an item and its attachments.
@@ -584,7 +650,8 @@ class ItemsClient:
         Returns:
             ItemOut: Updated full item representation.
         """
-        return ItemOut(**self.client._request("patch", f"/v1/items/{id}", data=data.model_dump()))
+        payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
+        return ItemOut(**self.client._request("patch", f"/v1/items/{id}", data=payload))
 
     def create_item_attachment(
         self,
@@ -717,69 +784,88 @@ class ItemsClient:
         return [ItemPath(**item) for item in data.get("data", [])]
 
 
-class LabelsClient:
-    """Sub-client for label management endpoints.
+class TagsClient:
+    """Sub-client for tag management endpoints.
 
-    Accessed via ``HomeboxClient.labels``.
+    Accessed via ``HomeboxClient.tags``.
     """
 
     def __init__(self, client: HomeboxClient):
         self.client = client
 
-    def get_all_labels(self) -> list[LabelOut]:
-        """Return all labels defined in the group.
+    def get_all_tags(self) -> list[TagOut]:
+        """Return all tags defined in the group.
 
         Returns:
-            list[LabelOut]: Every label with its ID, name, colour, description,
+            list[TagOut]: Every tag with its ID, name, colour, description,
                 and timestamps.
         """
-        data = self.client._request("get", "/v1/labels")
-        return [LabelOut(**item) for item in data.get("data", [])]
+        data = self.client._request("get", "/v1/tags")
+        return [TagOut(**item) for item in data.get("data", [])]
 
-    def create_label(self, data: LabelCreate) -> LabelSummary:
-        """Create a new label.
+    def create_tag(self, data: TagCreate) -> TagSummary:
+        """Create a new tag.
 
         Args:
-            data: Label creation payload.  ``name`` is required; ``color`` and
+            data: Tag creation payload.  ``name`` is required; ``color`` and
                 ``description`` are optional.
 
         Returns:
-            LabelSummary: Summary representation of the newly created label.
+            TagSummary: Summary representation of the newly created tag.
         """
-        return LabelSummary(**self.client._request("post", "/v1/labels", data=data.model_dump()))
+        return TagSummary(**self.client._request("post", "/v1/tags", data=data.model_dump(exclude_none=True)))
+
+    def get_tag(self, id: str) -> TagOut:
+        """Return the details of a single tag.
+
+        Args:
+            id: UUID of the tag.
+
+        Returns:
+            TagOut: Full tag representation.
+        """
+        return TagOut(**self.client._request("get", f"/v1/tags/{id}"))
+
+    def update_tag(self, id: str, data: TagOut) -> TagOut:
+        """Replace a tag's fields with the provided data.
+
+        Args:
+            id: UUID of the tag to update.
+            data: Updated tag payload.
+
+        Returns:
+            TagOut: Updated tag representation.
+        """
+        return TagOut(**self.client._request("put", f"/v1/tags/{id}", data=data.model_dump(exclude_none=True)))
+
+    def delete_tag(self, id: str):
+        """Permanently delete a tag.
+
+        Deleting a tag does **not** delete the items associated with it.
+
+        Args:
+            id: UUID of the tag to delete.
+        """
+        self.client._request("delete", f"/v1/tags/{id}")
+
+
+class LabelsClient(TagsClient):
+    """Backward-compatible alias wrapper for ``TagsClient``."""
+
+    def get_all_labels(self) -> list[LabelOut]:
+        return [LabelOut(**item.model_dump()) for item in self.get_all_tags()]
+
+    def create_label(self, data: LabelCreate) -> LabelSummary:
+        return LabelSummary(**self.create_tag(TagCreate(**data.model_dump(exclude_none=True))).model_dump())
 
     def get_label(self, id: str) -> LabelOut:
-        """Return the details of a single label.
-
-        Args:
-            id: UUID of the label.
-
-        Returns:
-            LabelOut: Full label representation.
-        """
-        return LabelOut(**self.client._request("get", f"/v1/labels/{id}"))
+        return LabelOut(**self.get_tag(id).model_dump())
 
     def update_label(self, id: str, data: LabelOut) -> LabelOut:
-        """Replace a label's fields with the provided data.
-
-        Args:
-            id: UUID of the label to update.
-            data: Updated label payload.
-
-        Returns:
-            LabelOut: Updated label representation.
-        """
-        return LabelOut(**self.client._request("put", f"/v1/labels/{id}", data=data.model_dump()))
+        return LabelOut(**self.update_tag(id, TagOut(**data.model_dump(exclude_none=True))).model_dump())
 
     def delete_label(self, id: str):
-        """Permanently delete a label.
-
-        Deleting a label does **not** delete the items associated with it.
-
-        Args:
-            id: UUID of the label to delete.
-        """
-        self.client._request("delete", f"/v1/labels/{id}")
+        self.delete_tag(id)
 
 
 class LocationsClient:
@@ -1073,18 +1159,22 @@ class UsersClient:
             UserOut: User details including ID, name, email, group association,
                 and role flags.
         """
-        return UserOut(**self.client._request("get", "/v1/users/self")["item"])
+        response = self.client._request("get", "/v1/users/self")
+        payload = response.get("item", response)
+        return UserOut(**payload)
 
     def update_account(self, data: UserUpdate) -> UserUpdate:
         """Update the current user's profile information.
 
         Args:
-            data: Fields to update (``name`` and/or ``email``).
+            data: Fields to update (``name`` and ``email``).
 
         Returns:
             UserUpdate: The updated profile data as echoed by the server.
         """
-        return UserUpdate(**self.client._request("put", "/v1/users/self", data=data.model_dump())["item"])
+        response = self.client._request("put", "/v1/users/self", data=data.model_dump())
+        payload = response.get("item", response)
+        return UserUpdate(**payload)
 
     def delete_account(self):
         """Permanently delete the current user's account.
@@ -1122,6 +1212,24 @@ class TemplatesClient:
     def __init__(self, client: HomeboxClient):
         self.client = client
 
+    @staticmethod
+    def _normalize_template_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        """Map legacy template label keys to v23 tag keys."""
+        if "defaultLabelIds" in payload and "defaultTagIds" not in payload:
+            payload["defaultTagIds"] = payload.pop("defaultLabelIds")
+        else:
+            payload.pop("defaultLabelIds", None)
+        return payload
+
+    @staticmethod
+    def _normalize_template_item_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        """Map legacy template-create-item label keys to v23 tag keys."""
+        if "labelIds" in payload and "tagIds" not in payload:
+            payload["tagIds"] = payload.pop("labelIds")
+        else:
+            payload.pop("labelIds", None)
+        return payload
+
     def get_all_templates(self) -> list[ItemTemplateSummary]:
         """Return all item templates in the current group."""
         data = self.client._request("get", "/v1/templates")
@@ -1129,7 +1237,8 @@ class TemplatesClient:
 
     def create_template(self, data: ItemTemplateCreate) -> ItemTemplateOut:
         """Create a new item template."""
-        return ItemTemplateOut(**self.client._request("post", "/v1/templates", data=data.model_dump()))
+        payload = self._normalize_template_payload(data.model_dump(exclude_none=True))
+        return ItemTemplateOut(**self.client._request("post", "/v1/templates", data=payload))
 
     def get_template(self, id: str) -> ItemTemplateOut:
         """Return a single item template by ID."""
@@ -1137,7 +1246,8 @@ class TemplatesClient:
 
     def update_template(self, id: str, data: ItemTemplateUpdate) -> ItemTemplateOut:
         """Update an existing item template."""
-        return ItemTemplateOut(**self.client._request("put", f"/v1/templates/{id}", data=data.model_dump()))
+        payload = self._normalize_template_payload(data.model_dump(exclude_none=True))
+        return ItemTemplateOut(**self.client._request("put", f"/v1/templates/{id}", data=payload))
 
     def delete_template(self, id: str):
         """Delete an item template."""
@@ -1145,7 +1255,8 @@ class TemplatesClient:
 
     def create_item_from_template(self, id: str, data: ItemTemplateCreateItemRequest) -> ItemOut:
         """Create an item from the specified template."""
-        return ItemOut(**self.client._request("post", f"/v1/templates/{id}/create-item", data=data.model_dump()))
+        payload = self._normalize_template_item_payload(data.model_dump(exclude_none=True))
+        return ItemOut(**self.client._request("post", f"/v1/templates/{id}/create-item", data=payload))
 
 
 class LabelMakerClient:

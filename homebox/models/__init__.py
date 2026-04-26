@@ -27,6 +27,7 @@ from .maintenance import MaintenanceEntry, MaintenanceEntryCreate, MaintenanceEn
 from .notifiers import NotifierCreate, NotifierOut, NotifierUpdate
 from .products import BarcodeProduct
 from .services import Latest, UserRegistration
+from .tags import TagCreate, TagOut, TagSummary
 from .templates import (
     ItemTemplateCreate,
     ItemTemplateCreateItemRequest,
@@ -36,20 +37,25 @@ from .templates import (
     TemplateField,
     TemplateLabelSummary,
     TemplateLocationSummary,
+    TemplateTagSummary,
 )
 from .types import AttachmentType, AuthRole, ItemFieldType, ItemType, MaintenanceFilterStatus, UserRole
-from .users import UserOut, UserUpdate
+from .users import UserOut, UserSummary, UserUpdate
 from .v1 import (
     ActionAmountResult,
     APISummary,
     Build,
     ChangePassword,
+    CreateRequest,
+    GroupAcceptInvitationResponse,
     GroupInvitation,
     GroupInvitationCreate,
+    GroupMemberAdd,
     ItemAttachmentToken,
     LoginForm,
     OIDCStatus,
     TokenResponse,
+    WipeInventoryOptions,
     Wrapped,
 )
 from .validate import ErrorResponse
@@ -61,12 +67,15 @@ __all__ = [
     "BarcodeProduct",
     "Build",
     "ChangePassword",
+    "CreateRequest",
     "Currency",
     "DuplicateOptions",
     "ErrorResponse",
     "Group",
     "GroupInvitation",
+    "GroupAcceptInvitationResponse",
     "GroupInvitationCreate",
+    "GroupMemberAdd",
     "GroupStatistics",
     "GroupUpdate",
     "ItemAttachment",
@@ -90,6 +99,9 @@ __all__ = [
     "LabelCreate",
     "LabelOut",
     "LabelSummary",
+    "TagCreate",
+    "TagOut",
+    "TagSummary",
     "Latest",
     "LocationCreate",
     "LocationOut",
@@ -109,15 +121,18 @@ __all__ = [
     "PaginationResultRepoItemSummary",
     "TemplateField",
     "TemplateLabelSummary",
+    "TemplateTagSummary",
     "TemplateLocationSummary",
     "TokenResponse",
     "TotalsByOrganizer",
     "TreeItem",
     "UserOut",
+    "UserSummary",
     "UserRegistration",
     "UserRole",
     "UserUpdate",
     "ValueOverTime",
     "ValueOverTimeEntry",
     "Wrapped",
+    "WipeInventoryOptions",
 ]

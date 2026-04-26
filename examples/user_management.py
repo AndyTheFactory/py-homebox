@@ -19,7 +19,7 @@ from pathlib import Path
 import requests
 
 from homebox import HomeboxClient
-from homebox.models import GroupInvitationCreate, UserRegistration
+from homebox.models import GroupInvitationCreate, UserRegistration, UserUpdate
 
 
 def _load_dotenv() -> None:
@@ -60,6 +60,7 @@ def main() -> None:
     admin_client = _build_client()
     ts = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
 
+    invitation_id: str | None = None
     invitation_token: str | None = None
     try:
         invitation = admin_client.groups.create_group_invitation(
@@ -68,6 +69,7 @@ def main() -> None:
                 expiresAt=(datetime.now(UTC) + timedelta(days=1)).isoformat(),
             )
         )
+        invitation_id = invitation.id
         invitation_token = invitation.token
         print(f"Created invitation token for registration: {invitation_token}")
     except requests.HTTPError as exc:
@@ -87,15 +89,22 @@ def main() -> None:
     )
     print(f"Created user: {email}")
 
-    # user_client = HomeboxClient(base_url=admin_client.base_url)
-    # user_client.login(email, password)
+    user_client = HomeboxClient(base_url=admin_client.base_url)
+    user_client.login(email, password)
 
-    # updated_name = f"{name} Updated"
-    # updated_user = user_client.users.update_account(UserUpdate(name=updated_name))
-    # print(f"Updated user profile name to: {updated_user.name}")
+    updated_name = f"{name} Updated"
+    updated_user = user_client.users.update_account(UserUpdate(name=updated_name, email=email))
+    print(f"Updated user profile name to: {updated_user.name}")
 
-    # user_client.users.delete_account()
-    # print("Deleted the created user account")
+    user_client.users.delete_account()
+    print("Deleted the created user account")
+
+    if invitation_id:
+        try:
+            admin_client.groups.delete_group_invitation(invitation_id)
+            print(f"Deleted invitation: {invitation_id}")
+        except requests.HTTPError as exc:
+            print(f"Could not delete invitation {invitation_id}: {exc}")
 
 
 if __name__ == "__main__":

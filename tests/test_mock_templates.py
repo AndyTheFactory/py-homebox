@@ -21,9 +21,10 @@ def test_get_all_templates(mocker, client: HomeboxClient):
 
 
 def test_create_template(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value={"id": "tmpl-1", "name": "Laptop"})
-    result = client.templates.create_template(models.ItemTemplateCreate(name="Laptop"))
+    mock_request = mocker.patch.object(client, "_request", return_value={"id": "tmpl-1", "name": "Laptop"})
+    result = client.templates.create_template(models.ItemTemplateCreate(name="Laptop", defaultLabelIds=["tag-1"]))
     assert result.id == "tmpl-1"
+    assert mock_request.call_args.kwargs["data"]["defaultTagIds"] == ["tag-1"]
 
 
 def test_get_template(mocker, client: HomeboxClient):
@@ -46,9 +47,10 @@ def test_delete_template(mocker, client: HomeboxClient):
 
 
 def test_create_item_from_template(mocker, client: HomeboxClient):
-    mocker.patch.object(client, "_request", return_value={"id": "item-1", "name": "Created"})
+    mock_request = mocker.patch.object(client, "_request", return_value={"id": "item-1", "name": "Created"})
     result = client.templates.create_item_from_template(
         "tmpl-1",
-        models.ItemTemplateCreateItemRequest(name="Created", locationId="loc-1"),
+        models.ItemTemplateCreateItemRequest(name="Created", locationId="loc-1", labelIds=["tag-1"]),
     )
     assert result.id == "item-1"
+    assert mock_request.call_args.kwargs["data"]["tagIds"] == ["tag-1"]
