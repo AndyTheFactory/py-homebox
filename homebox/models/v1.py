@@ -83,6 +83,18 @@ class LoginForm(BaseModel):
     username: Optional[str] = Field(default=None, examples=["admin@admin.com"])
 
 
+class OIDCStatus(BaseModel):
+    """OIDC availability/configuration summary exposed by the status endpoint."""
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    allowLocal: Optional[bool] = None
+    autoRedirect: Optional[bool] = None
+    buttonText: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
 class TokenResponse(BaseModel):
     """Authentication token response returned after a successful login or refresh."""
 
@@ -116,5 +128,6 @@ class APISummary(BaseModel):
     labelPrinting: Optional[bool] = None
     latest: Optional[services.Latest] = None
     message: Optional[str] = None
+    oidc: Optional[OIDCStatus] = None
     title: Optional[str] = None
     versions: Optional[List[str]] = None

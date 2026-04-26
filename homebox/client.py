@@ -25,6 +25,11 @@ from homebox.models import (
     ItemPatch,
     ItemPath,
     ItemSummary,
+    ItemTemplateCreate,
+    ItemTemplateCreateItemRequest,
+    ItemTemplateOut,
+    ItemTemplateSummary,
+    ItemTemplateUpdate,
     ItemUpdate,
     LabelCreate,
     LabelOut,
@@ -78,6 +83,7 @@ class HomeboxClient:
         reporting: Sub-client for reporting / export endpoints.
         labelmaker: Sub-client for printable label endpoints.
         products: Sub-client for barcode/QR-code product endpoints.
+        templates: Sub-client for item template endpoints.
 
     Example:
         >>> from homebox import HomeboxClient
@@ -122,6 +128,7 @@ class HomeboxClient:
         self.reporting = ReportingClient(self)
         self.labelmaker = LabelMakerClient(self)
         self.products = ProductsClient(self)
+        self.templates = TemplatesClient(self)
 
     def _request(self, method, endpoint, params=None, data=None, files=None, timeout=None) -> dict[Any, Any]:
         """Send an HTTP request and return the parsed JSON response body.
@@ -1006,6 +1013,47 @@ class UsersClient:
         """
         return TokenResponse(**self.client._request("get", "/v1/users/refresh"))
 
+    def oidc_login(self, timeout: float | None = None) -> str | None:
+        """Initiate OIDC login and return the provider redirect URL.
+
+        Args:
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            str | None: Location header value for the OIDC redirect, if
+                present.
+        """
+        response = requests.get(
+            f"{self.client.base_url}/v1/users/login/oidc",
+            headers=self.client.headers.copy(),
+            allow_redirects=False,
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        return response.headers.get("Location")
+
+    def oidc_callback(self, code: str, state: str, timeout: float | None = None) -> str | None:
+        """Call the OIDC callback endpoint and return the redirect location.
+
+        Args:
+            code: Authorization code received from the OIDC provider.
+            state: State value returned by the OIDC provider.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            str | None: Location header value returned by Homebox.
+        """
+        params = {"code": code, "state": state}
+        response = requests.get(
+            f"{self.client.base_url}/v1/users/login/oidc/callback",
+            params=params,
+            headers=self.client.headers.copy(),
+            allow_redirects=False,
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        return response.headers.get("Location")
+
     def register_new_user(self, data: UserRegistration):
         """Register a new user account.
 
@@ -1063,6 +1111,41 @@ class ReportingClient:
             str: Raw CSV-formatted Bill of Materials report.
         """
         return self.client._get("/v1/reporting/bill-of-materials", binary=False)
+
+
+class TemplatesClient:
+    """Sub-client for item template endpoints.
+
+    Accessed via ``HomeboxClient.templates``.
+    """
+
+    def __init__(self, client: HomeboxClient):
+        self.client = client
+
+    def get_all_templates(self) -> list[ItemTemplateSummary]:
+        """Return all item templates in the current group."""
+        data = self.client._request("get", "/v1/templates")
+        return [ItemTemplateSummary(**item) for item in data.get("data", [])]
+
+    def create_template(self, data: ItemTemplateCreate) -> ItemTemplateOut:
+        """Create a new item template."""
+        return ItemTemplateOut(**self.client._request("post", "/v1/templates", data=data.model_dump()))
+
+    def get_template(self, id: str) -> ItemTemplateOut:
+        """Return a single item template by ID."""
+        return ItemTemplateOut(**self.client._request("get", f"/v1/templates/{id}"))
+
+    def update_template(self, id: str, data: ItemTemplateUpdate) -> ItemTemplateOut:
+        """Update an existing item template."""
+        return ItemTemplateOut(**self.client._request("put", f"/v1/templates/{id}", data=data.model_dump()))
+
+    def delete_template(self, id: str):
+        """Delete an item template."""
+        self.client._request("delete", f"/v1/templates/{id}")
+
+    def create_item_from_template(self, id: str, data: ItemTemplateCreateItemRequest) -> ItemOut:
+        """Create an item from the specified template."""
+        return ItemOut(**self.client._request("post", f"/v1/templates/{id}/create-item", data=data.model_dump()))
 
 
 class LabelMakerClient:

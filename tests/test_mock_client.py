@@ -55,6 +55,7 @@ def test_client_sub_clients_initialized(client):
     assert client.reporting is not None
     assert client.labelmaker is not None
     assert client.products is not None
+    assert client.templates is not None
 
 
 # ---------------------------------------------------------------------------
@@ -182,11 +183,18 @@ def test_application_info(client):
     with patch.object(
         client,
         "_request",
-        return_value={"health": True, "demo": False, "allowRegistration": True},
+        return_value={
+            "health": True,
+            "demo": False,
+            "allowRegistration": True,
+            "oidc": {"enabled": True, "allowLocal": True, "autoRedirect": False, "buttonText": "Sign in"},
+        },
     ):
         result = client.application_info()
     assert isinstance(result, models.APISummary)
     assert result.health is True
+    assert result.oidc is not None
+    assert result.oidc.enabled is True
 
 
 # ---------------------------------------------------------------------------

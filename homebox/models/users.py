@@ -69,6 +69,8 @@ class UserOut(BaseModel):
     isOwner: Optional[bool] = None
     isSuperuser: Optional[bool] = None
     name: Optional[str] = None
+    oidcIssuer: Optional[str] = None
+    oidcSubject: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
