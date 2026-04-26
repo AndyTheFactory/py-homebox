@@ -6,6 +6,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .types import TemplateFieldType
+
 
 class TemplateField(BaseModel):
     """Custom text field definition used by item templates."""
@@ -13,10 +15,13 @@ class TemplateField(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    booleanValue: Optional[bool] = None
     id: Optional[str] = None
     name: Optional[str] = None
+    numberValue: Optional[int] = None
     textValue: Optional[str] = None
-    type: Optional[str] = None
+    timeValue: Optional[str] = None
+    type: Optional[TemplateFieldType] = None
 
 
 class TemplateTagSummary(BaseModel):

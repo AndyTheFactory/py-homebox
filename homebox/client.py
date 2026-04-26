@@ -180,7 +180,15 @@ class HomeboxClient:
         if response.status_code == 204:
             return {}
 
-        result = response.json()
+        if not response.content:
+            return {}
+
+        try:
+            result = response.json()
+        except ValueError:
+            # Some endpoints may return non-JSON success payloads.
+            return {"raw": response.text}
+
         if isinstance(result, list):
             return {"data": result}
         return result
@@ -513,6 +521,22 @@ class ItemsClient:
             payload.pop("labelIds", None)
         return payload
 
+    @staticmethod
+    def _unwrap_item_response(response: dict[str, Any]) -> dict[str, Any]:
+        """Normalize possible wrapper response shapes to an item payload."""
+        if not isinstance(response, dict):
+            return {}
+
+        wrapped = response.get("item")
+        if isinstance(wrapped, dict):
+            return wrapped
+
+        wrapped_data = response.get("data")
+        if isinstance(wrapped_data, dict):
+            return wrapped_data
+
+        return response
+
     def query_all_items(
         self,
         q: str | None = None,
@@ -616,7 +640,8 @@ class ItemsClient:
             ItemOut: Full item representation including attachments, custom
                 fields, maintenance log, and nested location/label information.
         """
-        return ItemOut(**self.client._request("get", f"/v1/items/{id}"))
+        response = self.client._request("get", f"/v1/items/{id}")
+        return ItemOut(**self._unwrap_item_response(response))
 
     def update_item(self, id: str, data: ItemUpdate) -> ItemOut:
         """Replace a item's fields with the provided data (full update).
@@ -630,7 +655,8 @@ class ItemsClient:
             ItemOut: Updated full item representation.
         """
         payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
-        return ItemOut(**self.client._request("put", f"/v1/items/{id}", data=payload))
+        response = self.client._request("put", f"/v1/items/{id}", data=payload)
+        return ItemOut(**self._unwrap_item_response(response))
 
     def delete_item(self, id: str):
         """Permanently delete an item and its attachments.
@@ -651,7 +677,8 @@ class ItemsClient:
             ItemOut: Updated full item representation.
         """
         payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
-        return ItemOut(**self.client._request("patch", f"/v1/items/{id}", data=payload))
+        response = self.client._request("patch", f"/v1/items/{id}", data=payload)
+        return ItemOut(**self._unwrap_item_response(response))
 
     def create_item_attachment(
         self,
@@ -684,7 +711,8 @@ class ItemsClient:
             data["primary"] = primary
         if name:
             data["name"] = name
-        return ItemOut(**self.client._request("post", f"/v1/items/{id}/attachments", data=data, files=files))
+        response = self.client._request("post", f"/v1/items/{id}/attachments", data=data, files=files)
+        return ItemOut(**self._unwrap_item_response(response))
 
     def get_item_attachment(self, id: str, attachment_id: str) -> bytes:
         """Retrieve a short-lived download token for an item attachment.
@@ -709,9 +737,15 @@ class ItemsClient:
         Returns:
             ItemOut: Updated full item representation.
         """
-        return ItemOut(
-            **self.client._request("put", f"/v1/items/{id}/attachments/{attachment_id}", data=data.model_dump())
-        )
+        response = self.client._request("put", f"/v1/items/{id}/attachments/{attachment_id}", data=data.model_dump())
+        payload = self._unwrap_item_response(response)
+
+        # v24-compatible fallback: if update endpoint doesn't return the item,
+        # fetch the latest item state so the method remains ItemOut-compatible.
+        if not any(key in payload for key in ("id", "name", "tags", "location", "attachments")):
+            return self.get_item(id)
+
+        return ItemOut(**payload)
 
     def delete_item_attachment(self, id: str, attachment_id: str):
         """Delete an attachment from an item.
@@ -733,7 +767,8 @@ class ItemsClient:
         Returns:
             ItemOut: Full representation of the newly created duplicate item.
         """
-        return ItemOut(**self.client._request("post", f"/v1/items/{id}/duplicate", data=data.model_dump()))
+        response = self.client._request("post", f"/v1/items/{id}/duplicate", data=data.model_dump())
+        return ItemOut(**self._unwrap_item_response(response))
 
     def get_maintenance_log(
         self, id: str, status: MaintenanceFilterStatus | None = None
@@ -1230,6 +1265,22 @@ class TemplatesClient:
             payload.pop("labelIds", None)
         return payload
 
+    @staticmethod
+    def _unwrap_template_response(response: dict[str, Any]) -> dict[str, Any]:
+        """Normalize possible wrapper response shapes to a template payload."""
+        if not isinstance(response, dict):
+            return {}
+
+        wrapped = response.get("item")
+        if isinstance(wrapped, dict):
+            return wrapped
+
+        wrapped_data = response.get("data")
+        if isinstance(wrapped_data, dict):
+            return wrapped_data
+
+        return response
+
     def get_all_templates(self) -> list[ItemTemplateSummary]:
         """Return all item templates in the current group."""
         data = self.client._request("get", "/v1/templates")
@@ -1238,16 +1289,19 @@ class TemplatesClient:
     def create_template(self, data: ItemTemplateCreate) -> ItemTemplateOut:
         """Create a new item template."""
         payload = self._normalize_template_payload(data.model_dump(exclude_none=True))
-        return ItemTemplateOut(**self.client._request("post", "/v1/templates", data=payload))
+        response = self.client._request("post", "/v1/templates", data=payload)
+        return ItemTemplateOut(**self._unwrap_template_response(response))
 
     def get_template(self, id: str) -> ItemTemplateOut:
         """Return a single item template by ID."""
-        return ItemTemplateOut(**self.client._request("get", f"/v1/templates/{id}"))
+        response = self.client._request("get", f"/v1/templates/{id}")
+        return ItemTemplateOut(**self._unwrap_template_response(response))
 
     def update_template(self, id: str, data: ItemTemplateUpdate) -> ItemTemplateOut:
         """Update an existing item template."""
         payload = self._normalize_template_payload(data.model_dump(exclude_none=True))
-        return ItemTemplateOut(**self.client._request("put", f"/v1/templates/{id}", data=payload))
+        response = self.client._request("put", f"/v1/templates/{id}", data=payload)
+        return ItemTemplateOut(**self._unwrap_template_response(response))
 
     def delete_template(self, id: str):
         """Delete an item template."""
@@ -1256,7 +1310,8 @@ class TemplatesClient:
     def create_item_from_template(self, id: str, data: ItemTemplateCreateItemRequest) -> ItemOut:
         """Create an item from the specified template."""
         payload = self._normalize_template_item_payload(data.model_dump(exclude_none=True))
-        return ItemOut(**self.client._request("post", f"/v1/templates/{id}/create-item", data=payload))
+        response = self.client._request("post", f"/v1/templates/{id}/create-item", data=payload)
+        return ItemOut(**ItemsClient._unwrap_item_response(response))
 
 
 class LabelMakerClient:

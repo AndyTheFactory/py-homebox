@@ -57,6 +57,13 @@ def test_get_item(mocker, client: HomeboxClient):
     assert result.labels == []
 
 
+def test_get_item_wrapped_response(mocker, client: HomeboxClient):
+    mocker.patch.object(client, "_request", return_value={"item": {"id": "1", "name": "Test Item", "tags": []}})
+    result = client.items.get_item("1")
+    assert result.id == "1"
+    assert result.name == "Test Item"
+
+
 def test_update_item(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "1", "name": "Updated Item"})
     result = client.items.update_item("1", models.ItemUpdate(name="Updated Item"))
@@ -92,6 +99,15 @@ def test_update_item_attachment(mocker, client: HomeboxClient):
     assert result.name == "Test Item"
 
 
+def test_update_item_attachment_fallback_to_get_item(mocker, client: HomeboxClient):
+    mocker.patch.object(client, "_request", return_value={"raw": "ok"})
+    mock_get_item = mocker.patch.object(client.items, "get_item", return_value=models.ItemOut(id="1", name="Updated"))
+    result = client.items.update_item_attachment("1", "1", models.ItemAttachmentUpdate(title="New Title"))
+    mock_get_item.assert_called_once_with("1")
+    assert result.id == "1"
+    assert result.name == "Updated"
+
+
 def test_delete_item_attachment(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value=None)
     client.items.delete_item_attachment("1", "1")
@@ -99,6 +115,12 @@ def test_delete_item_attachment(mocker, client: HomeboxClient):
 
 def test_duplicate_item(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"id": "2", "name": "Test Item (copy)"})
+    result = client.items.duplicate_item("1", models.DuplicateOptions(copyPrefix=" (copy)"))
+    assert result.name == "Test Item (copy)"
+
+
+def test_duplicate_item_wrapped_response(mocker, client: HomeboxClient):
+    mocker.patch.object(client, "_request", return_value={"item": {"id": "2", "name": "Test Item (copy)"}})
     result = client.items.duplicate_item("1", models.DuplicateOptions(copyPrefix=" (copy)"))
     assert result.name == "Test Item (copy)"
 

@@ -5,7 +5,7 @@ build-backend = 'hatchling.build'
 
 [project]
 name = "homebox"
-version = "0.3.0"
+version = "0.4.0"
 description = "A Python wrapper for the Homebox API"
 authors = [{ name = "Andrei Paraschiv", email = "andrei@thephpfactory.com" }]
 license = { file = "LICENSE" }
