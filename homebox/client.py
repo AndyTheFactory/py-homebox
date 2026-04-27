@@ -238,7 +238,9 @@ class HomeboxClient:
 
         return response.text if not binary else response.content
 
-    def login(self, username, password, stay_logged_in=False, provider=None):
+    def login(
+        self, username: str, password: str, stay_logged_in: bool = False, provider: Optional[str] = None
+    ) -> TokenResponse:
         """Authenticate with username and password and store the resulting token.
 
         After a successful login all subsequent requests made through this
@@ -277,7 +279,7 @@ class HomeboxClient:
             )
         return token_response
 
-    def currency(self):
+    def currency(self) -> Currency:
         """Return the group's configured currency.
 
         Returns:
@@ -286,7 +288,7 @@ class HomeboxClient:
         """
         return Currency(**self._request("get", "/v1/currency"))
 
-    def application_info(self):
+    def application_info(self) -> APISummary:
         """Return a summary of the running Homebox instance.
 
         Includes build information, feature flags (registration, demo mode, label

@@ -1,0 +1,81 @@
+site_name: py-homebox
+site_description: A Python client library for the Homebox REST API
+site_url: https://py-homebox.readthedocs.io/
+repo_url: https://github.com/AndyTheFactory/py-homebox
+repo_name: AndyTheFactory/py-homebox
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+
+nav:
+  - Home: index.md
+  - API Reference:
+    - HomeboxClient: api/client.md
+    - Items: api/items.md
+    - Labels: api/labels.md
+    - Locations: api/locations.md
+    - Maintenance: api/maintenance.md
+    - Groups & Statistics: api/groups.md
+    - Notifiers: api/notifiers.md
+    - Users: api/users.md
+    - Reporting: api/reporting.md
+    - Label Maker: api/labelmaker.md
+    - Products & Barcodes: api/products.md
+    - Actions: api/actions.md
+    - Assets: api/assets.md
+  - Examples:
+    - Overview: examples/index.md
+    - Get Homebox Statistics: examples/get_homebox_statistics.md
+    - Create Location and Add Items: examples/create_location_add_items.md
+    - Item Attachments: examples/item_attachments.md
+    - Get Item Labels: examples/get_items_label.md
+    - User Management: examples/user_management.md
+  - FAQ: faq.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
