@@ -65,7 +65,7 @@ def main() -> None:
     group_stats = client.groups.get_group_statistics()
     tag_stats = []
     # The tag statistics endpoint is broken, returns None
-    # tag_stats = client.groups.get_tag_statistics()
+    tag_stats = client.groups.get_tag_statistics()
 
     location_stats = client.groups.get_location_statistics()
 

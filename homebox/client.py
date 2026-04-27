@@ -469,6 +469,8 @@ class GroupsClient:
     def get_tag_statistics(self) -> list[TotalsByOrganizer]:
         """Return the total item value grouped by tag."""
         data = self.client._request("get", "/v1/groups/statistics/tags")
+        if data is None:
+            return []
         return [TotalsByOrganizer(**item) for item in data["data"]]
 
     def get_label_statistics(self) -> list[TotalsByOrganizer]:
@@ -1014,11 +1016,11 @@ class MaintenanceClient:
         """Initialise the maintenance sub-client with the shared root client."""
         self.client = client
 
-    def query_all_maintenance(self, status: MaintenanceFilterStatus | None = None) -> list[MaintenanceEntryWithDetails]:
+    def query_all_maintenance(self, status: MaintenanceFilterStatus) -> list[MaintenanceEntryWithDetails]:
         """Return maintenance entries across all items, optionally filtered by status.
 
         Args:
-            status: Optional status filter – ``MaintenanceFilterStatus.MaintenanceFilterStatusScheduled``,
+            status: Status filter – ``MaintenanceFilterStatus.MaintenanceFilterStatusScheduled``,
                 ``MaintenanceFilterStatus.MaintenanceFilterStatusCompleted``, or
                 ``MaintenanceFilterStatus.MaintenanceFilterStatusBoth`` (default).
 
