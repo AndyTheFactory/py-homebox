@@ -5,7 +5,6 @@ Bugfix release.
 * fixed `get_tag_statistics()` raising an exception when the Homebox API returns `None` for the tag-statistics endpoint – now returns an empty list instead
 * made the `status` parameter of `query_all_maintenance()` required (non-optional) and updated its docstring to reflect that `MaintenanceFilterStatus.MaintenanceFilterStatusBoth` should be passed for an unfiltered result
 * re-enabled the `get_tag_statistics()` call in `examples/get_homebox_statistics.py` now that the `None` response is handled gracefully
-* updated maintenance-related unit tests to always supply the required `status` argument
 
 # v 0.5.0
 
