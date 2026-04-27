@@ -386,7 +386,7 @@ def test_query_all_maintenance_completed(mocker, client):
 
 def test_query_all_maintenance_empty(mocker, client):
     mocker.patch.object(client, "_request", return_value={"data": []})
-    result = client.maintenance.query_all_maintenance()
+    result = client.maintenance.query_all_maintenance(status=MaintenanceFilterStatus.MaintenanceFilterStatusBoth)
     assert result == []
 
 
