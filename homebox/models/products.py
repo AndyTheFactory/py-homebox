@@ -9,7 +9,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .items import ItemCreate
+from .entities import EntityCreate
 
 
 class BarcodeProduct(BaseModel):
@@ -21,7 +21,7 @@ class BarcodeProduct(BaseModel):
     barcode: Optional[str] = None
     imageBase64: Optional[str] = None
     imageURL: Optional[str] = None
-    item: Optional[ItemCreate] = None
+    item: Optional[EntityCreate] = None
     manufacturer: Optional[str] = None
     modelNumber: Optional[str] = Field(default=None, description="Identifications")
     notes: Optional[str] = Field(default=None, description="Extras")

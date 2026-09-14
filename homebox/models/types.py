@@ -51,6 +51,38 @@ class ItemType(Enum):
     ItemTypeItem = "item"
 
 
+class EntityPathType(Enum):
+    """Kinds of node returned in an entity ancestry path."""
+
+    EntityPathTypeLocation = "location"
+    EntityPathTypeItem = "item"
+
+
+class EntityFieldType(Enum):
+    """Supported custom entity field value types."""
+
+    TypeText = "text"
+    TypeNumber = "number"
+    TypeBoolean = "boolean"
+    TypeTime = "time"
+
+
+class ExportKind(Enum):
+    """Collection transfer job kind."""
+
+    Export = "export"
+    Import = "import"
+
+
+class ExportStatus(Enum):
+    """Collection transfer job lifecycle state."""
+
+    Pending = "pending"
+    Running = "running"
+    Completed = "completed"
+    Failed = "failed"
+
+
 class MaintenanceFilterStatus(Enum):
     """Enumeration of maintenance-log filter values."""
 
@@ -72,6 +104,10 @@ __all__ = [
     "AuthRole",
     "ItemFieldType",
     "ItemType",
+    "EntityFieldType",
+    "EntityPathType",
+    "ExportKind",
+    "ExportStatus",
     "MaintenanceFilterStatus",
     "TemplateFieldType",
     "UserRole",

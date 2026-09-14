@@ -106,10 +106,60 @@ class UserSettings(BaseModel):
     )
 
 
+class ForgotPasswordRequest(BaseModel):
+    """Payload for requesting a password-reset email."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    """Payload for completing a password reset."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    password: str = Field(..., min_length=6)
+    token: str = Field(..., min_length=20)
+
+
+class APIKeyCreate(BaseModel):
+    """Payload for creating a personal API key."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    expiresAt: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class APIKeyOut(BaseModel):
+    """API key metadata; secret tokens are never included in list responses."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    createdAt: Optional[str] = None
+    expiresAt: Optional[str] = None
+    id: Optional[str] = None
+    lastUsedAt: Optional[str] = None
+    name: Optional[str] = None
+    userId: Optional[str] = None
+
+
+class APIKeyCreatedOut(APIKeyOut):
+    """New API key response, including its one-time secret token."""
+
+    token: Optional[str] = None
+
+
 User.model_rebuild(raise_errors=False)
 
 
 __all__ = [
+    "APIKeyCreate",
+    "APIKeyCreatedOut",
+    "APIKeyOut",
+    "ForgotPasswordRequest",
+    "ResetPasswordRequest",
     "UserSettings",
     "UserSummary",
     "UserOut",
