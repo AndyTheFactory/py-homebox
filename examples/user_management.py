@@ -1,10 +1,10 @@
-"""Example script that shows how to manage users in Homebox.
+"""Example script that shows how to manage users and user settings in Homebox.
 
 Script demonstrates how to create, update, and delete users.
 
 In order to run this script, you need to have the following environment variables set:
 - HOMEBOX_URL: the URL of your Homebox instance (e.g. http://localhost
-- HOMEBOX_USERNAME: the username of a user with permissions to create locations and items
+- HOMEBOX_USERNAME: the username of a user with permissions to invite users
 - HOMEBOX_PASSWORD: the password of that user
 
 You can use the .env.sample file in the examples directory as a template for your .env file.
@@ -96,7 +96,7 @@ def main() -> None:
     updated_user = user_client.users.update_account(UserUpdate(name=updated_name, email=email))
     print(f"Updated user profile name to: {updated_user.name}")
 
-    # v0.5.0: retrieve and update arbitrary per-user settings.
+    # Retrieve and update arbitrary per-user settings.
     current_settings = user_client.users.get_user_settings().model_dump(exclude_none=True)
     print(f"Current settings keys: {sorted(current_settings.keys()) if current_settings else 'none'}")
 
