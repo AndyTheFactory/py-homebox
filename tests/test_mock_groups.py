@@ -113,6 +113,11 @@ def test_get_location_statistics(mocker, client: HomeboxClient):
     assert result[0].name == "Test Location"
 
 
+def test_get_location_statistics_handles_null_response(mocker, client: HomeboxClient):
+    mocker.patch.object(client, "_request", return_value=None)
+    assert client.groups.get_location_statistics() == []
+
+
 def test_get_purchase_price_statistics(mocker, client: HomeboxClient):
     mocker.patch.object(client, "_request", return_value={"valueAtStart": 100, "valueAtEnd": 200})
     result = client.groups.get_purchase_price_statistics()

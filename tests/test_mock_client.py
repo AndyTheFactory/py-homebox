@@ -46,6 +46,9 @@ def test_client_sub_clients_initialized(client):
     assert client.actions is not None
     assert client.assets is not None
     assert client.groups is not None
+    assert client.entities is not None
+    assert client.entity_types is not None
+    assert client.group_exports is not None
     assert client.items is not None
     assert client.tags is not None
     assert client.labels is not None
