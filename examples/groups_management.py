@@ -1,4 +1,4 @@
-"""Example script on how to create groups, add users to groups, add, revoke invitations, and remove users from groups.
+"""Example script for groups, invitations, registration, and member removal.
 
 Script create a new group, create a new test-user, invites the user to the group.
 
@@ -8,7 +8,7 @@ and finally removes the test user from the group.
 
 In order to run this script, you need to have the following environment variables set:
 - HOMEBOX_URL: the URL of your Homebox instance (e.g. http://localhost/api)
-- HOMEBOX_USERNAME: the username of a user with permissions to create locations and items
+- HOMEBOX_USERNAME: the username of a user with permissions to manage groups
 - HOMEBOX_PASSWORD: the password of that user
 
 You can use the .env.sample file in the examples directory as a template for your .env file.
@@ -63,7 +63,7 @@ def _print_members(client: HomeboxClient, title: str) -> None:
     members = client.groups.get_group_members()
     print(f"{title} ({len(members)}):")
     for member in members:
-        print(f"- {member.name} ({member.email}) id={member.id}, owner={member.isOwner}")
+        print(f"- {member.name} ({member.email}) id={member.id}")
 
 
 def _print_invitations(client: HomeboxClient, title: str) -> None:

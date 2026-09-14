@@ -4,7 +4,7 @@ Script prints out  the statistics to the console.
 
 In order to run this script, you need to have the following environment variables set:
 - HOMEBOX_URL: the URL of your Homebox instance (e.g. http://localhost
-- HOMEBOX_USERNAME: the username of a user with permissions to create locations and items
+- HOMEBOX_USERNAME: the username of a user with permissions to view group statistics
 - HOMEBOX_PASSWORD: the password of that user
 
 You can use the .env.sample file in the examples directory as a template for your .env file.
@@ -15,6 +15,8 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+import requests
 
 from homebox import HomeboxClient
 
@@ -57,14 +59,13 @@ def main() -> None:
     client = _build_client()
 
     app = client.application_info()
-    currency = None
-
-    # The currency endpoint is currently broken, raises  404 error
-    # currency = client.currency()
+    try:
+        currency = client.currency()
+    except requests.HTTPError as exc:
+        currency = None
+        print(f"Currency endpoint unavailable ({exc}); continuing without currency details.")
 
     group_stats = client.groups.get_group_statistics()
-    tag_stats = []
-    # The tag statistics endpoint is broken, returns None
     tag_stats = client.groups.get_tag_statistics()
 
     location_stats = client.groups.get_location_statistics()

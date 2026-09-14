@@ -10,7 +10,7 @@ Homebox is a self-hosted home inventory management system that lets you track, m
 
 ## Features
 
-- Full coverage of the Homebox v1 API (items, labels, locations, maintenance, notifiers, groups, users, reporting, label-maker, products/barcodes)
+- Full coverage of the Homebox v1 API (entities, entity types, tags, maintenance, imports/exports, notifiers, groups, users, reporting, label-maker, products/barcodes)
 - Pydantic v2 models for all request and response payloads
 - Automatic Bearer-token injection after `login()`
 - Environment-variable based configuration (no hard-coded credentials)
@@ -33,6 +33,8 @@ uv add homebox
 ---
 
 ## Compatibility
+version 0.6.0 is compatible with Homebox v0.26.0 API.
+
 version 0.5.0 is compatible with Homebox v0.25.0 API.
 
 version 0.4.0 is compatible with Homebox v0.24.0 API.
@@ -119,54 +121,59 @@ client.login("admin@admin.com", "admin")
 
 ## Usage examples
 
-### Items
+### Entities
 
 ```python
-# List all items (paginated)
-result = client.items.query_all_items()
-for item in result.items or []:
-    print(item.name, item.location)
+# List all entities (items and locations, paginated)
+result = client.entities.query_all_entities()
+for entity in result.items or []:
+    print(entity.name, entity.entityType)
 
-# Search for items by name
-result = client.items.query_all_items(q="laptop")
-
-# Filter by tag and location (preferred in v0.4.0)
-result = client.items.query_all_items(
-    tags=["tag-uuid-1", "tag-uuid-2"],
-    locations=["location-uuid-1"],
-    page=1,
-    pageSize=50,
+# Search and filter entities
+result = client.entities.query_all_entities(
+    q="laptop",
+    tags=["tag-uuid-1"],
+    parentIds=["location-uuid-1"],
 )
 
-# Create an item
-from homebox.models import ItemCreate
-new_item = client.items.create_item(ItemCreate(
+# Create a location-like entity type
+from homebox.models import EntityTypeCreate
+location_type = client.entity_types.create_entity_type(
+    EntityTypeCreate(name="Location", icon="warehouse", isLocation=True)
+)
+
+# Create an entity
+from homebox.models import EntityCreate
+new_item = client.entities.create_entity(EntityCreate(
     name="MacBook Pro",
     description="Work laptop",
     quantity=1,
-    locationId="location-uuid",
+    entityTypeId="device-type-uuid",
+    parentId="location-uuid",
 ))
 print(new_item.id)
 
-# Get full item details
-item = client.items.get_item("item-uuid")
+# Get and update full entity details
+entity = client.entities.get_entity("entity-uuid")
 
-# Update an item
-from homebox.models import ItemUpdate
-client.items.update_item("item-uuid", ItemUpdate(name="MacBook Pro M3"))
+from homebox.models import EntityUpdate
+client.entities.update_entity("entity-uuid", EntityUpdate(name="MacBook Pro M3"))
 
-# Delete an item
-client.items.delete_item("item-uuid")
+# Delete an entity
+client.entities.delete_entity("entity-uuid")
 
-# Export all items as CSV
-csv_data = client.items.export_items()
-with open("items.csv", "w") as f:
+# Export all entities as CSV
+csv_data = client.entities.export_entities()
+with open("entities.csv", "w") as f:
     f.write(csv_data)
 
-# Import items from CSV
-with open("items.csv", "rb") as f:
-    client.items.import_items(f.read())
+# Import entities from CSV
+with open("entities.csv", "rb") as f:
+    client.entities.import_entities(f.read())
 ```
+
+The legacy `client.items` and `client.locations` namespaces remain available as
+compatibility adapters and send requests to the v0.26 entity endpoints.
 
 ### Labels
 
@@ -183,26 +190,25 @@ label = client.labels.create_label(LabelCreate(name="Electronics", color="#0ea5e
 client.labels.delete_label(label.id)
 ```
 
-### Locations
+### Location-like entities
 
 ```python
-from homebox.models import LocationCreate
+from homebox.models import EntityCreate
 
-# List all locations
-locations = client.locations.get_all_locations()
+# Find a configured location entity type
+location_type = next(t for t in client.entity_types.get_all_entity_types() if t.isLocation)
 
-# List only root (top-level) locations
-roots = client.locations.get_all_locations(filterChildren=True)
+# Get the full entity tree
+tree = client.entities.get_entities_tree(withItems=True)
 
-# Get the full location tree (with nested children)
-tree = client.locations.get_locations_tree()
+# Create a location-like entity
+office = client.entities.create_entity(
+    EntityCreate(name="Office", entityTypeId=location_type.id)
+)
 
-# Create a location
-office = client.locations.create_location(LocationCreate(name="Office"))
-
-# Create a nested location
-desk = client.locations.create_location(
-    LocationCreate(name="Desk", parentId=office.id)
+# Create a nested location-like entity
+desk = client.entities.create_entity(
+    EntityCreate(name="Desk", entityTypeId=location_type.id, parentId=office.id)
 )
 ```
 
@@ -211,9 +217,9 @@ desk = client.locations.create_location(
 ```python
 from homebox.models import MaintenanceEntryCreate, MaintenanceFilterStatus
 
-# Add a maintenance entry to an item
-entry = client.items.create_maintenance_entry(
-    "item-uuid",
+# Add a maintenance entry to an entity
+entry = client.entities.create_maintenance_entry(
+    "entity-uuid",
     MaintenanceEntryCreate(
         name="Annual service",
         scheduledDate="2025-06-01",
@@ -221,7 +227,7 @@ entry = client.items.create_maintenance_entry(
     ),
 )
 
-# List only scheduled maintenance entries across all items
+# List scheduled maintenance entries across all entities
 scheduled = client.maintenance.query_all_maintenance(
     status=MaintenanceFilterStatus.MaintenanceFilterStatusScheduled
 )
@@ -261,8 +267,8 @@ client.notifiers.test_notifier(notifier.url)
 ```python
 # Upload a photo attachment
 with open("photo.jpg", "rb") as f:
-    client.items.create_item_attachment(
-        "item-uuid",
+    client.entities.create_attachment(
+        "entity-uuid",
         file=f.read(),
         type="photo",
         primary=True,
@@ -316,14 +322,30 @@ client.users.update_account(UserUpdate(name="Alice Smith", email=me.email))
 # Change password
 client.users.change_password(ChangePassword(current="old", new="new-secret"))
 
-# Read and update arbitrary per-user settings (v0.5.0)
+# Read and update arbitrary per-user settings
 settings = client.users.get_user_settings()
 settings_payload = settings.model_dump(exclude_none=True)
 settings_payload["ui.table.pageSize"] = 50
 client.users.update_user_settings(settings_payload)
 
+# Create and later revoke a personal API key (v0.26.0)
+from homebox.models import APIKeyCreate
+api_key = client.users.create_api_key(APIKeyCreate(name="Automation"))
+client.users.delete_api_key(api_key.id)
+
 # Log out
 client.users.user_logout()
+```
+
+### Collection exports
+
+```python
+# Start an asynchronous collection export and poll its status
+export = client.group_exports.start_export()
+export = client.group_exports.get_export(export.id)
+
+if export.status == "completed":
+    archive = client.group_exports.download_export(export.id)
 ```
 
 ## Contributing

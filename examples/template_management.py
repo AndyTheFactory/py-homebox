@@ -1,6 +1,6 @@
-"""Example script that shows how to manage item templates in Homebox.
+"""Example script that shows how to manage entity templates in Homebox.
 
-Script demonstrates how to create, update, and delete item templates.
+The script creates, updates, instantiates, and deletes an entity template.
 
 In order to run this script, you need to have the following environment variables set:
 - HOMEBOX_URL: the URL of your Homebox instance (e.g. http://localhost
@@ -16,13 +16,15 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
+from _v26 import require_entity_type, require_id
+
 from homebox import HomeboxClient
 from homebox.models import (
-    ItemTemplateCreate,
-    ItemTemplateCreateItemRequest,
-    ItemTemplateUpdate,
-    LabelCreate,
-    LocationCreate,
+    EntityCreate,
+    EntityTemplateCreate,
+    EntityTemplateCreateItemRequest,
+    EntityTemplateUpdate,
+    TagCreate,
     TemplateField,
     TemplateFieldType,
 )
@@ -64,6 +66,8 @@ def _build_client() -> HomeboxClient:
 def main() -> None:
     _load_dotenv()
     client = _build_client()
+    location_type = require_entity_type(client, is_location=True)
+    item_type = require_entity_type(client, is_location=False)
 
     created_template_id: str | None = None
     created_item_id: str | None = None
@@ -76,27 +80,28 @@ def main() -> None:
         before = client.templates.get_all_templates()
         print(f"Templates before create: {len(before)}")
 
-        location = client.locations.create_location(
-            LocationCreate(
+        location = client.entities.create_entity(
+            EntityCreate(
                 name=f"Template Example Shelf {ts}",
                 description="Location used by template_management.py",
+                entityTypeId=location_type.id,
             )
         )
-        created_location_id = location.id
+        created_location_id = require_id(location.id, resource="Location entity")
         print(f"Created location: {location.name} ({location.id})")
 
-        label = client.labels.create_label(
-            LabelCreate(
+        label = client.tags.create_tag(
+            TagCreate(
                 name=f"TemplateExample{ts}",
                 color="#22c55e",
                 description="Label used by template_management.py",
             )
         )
-        created_label_id = label.id
+        created_label_id = require_id(label.id, resource="Tag")
         print(f"Created label: {label.name} ({label.id})")
 
         template = client.templates.create_template(
-            ItemTemplateCreate(
+            EntityTemplateCreate(
                 name=f"Laptop Template {ts}",
                 description="Reusable template for laptop assets",
                 notes="Created by template_management.py",
@@ -108,26 +113,24 @@ def main() -> None:
                 defaultInsured=True,
                 defaultLifetimeWarranty=False,
                 defaultWarrantyDetails="36 months standard warranty",
-                defaultLabelIds=[label.id],
-                defaultLocationId=location.id,
+                defaultTagIds=[created_label_id],
+                defaultLocationId=created_location_id,
                 includePurchaseFields=True,
                 includeWarrantyFields=True,
                 includeSoldFields=False,
-                fields=[
-                    TemplateField(name="Asset Owner", type=TemplateFieldType.TypeText.value, textValue="IT Department")
-                ],
+                fields=[TemplateField(name="Asset Owner", type=TemplateFieldType.TypeText, textValue="IT Department")],
             )
         )
-        created_template_id = template.id
+        created_template_id = require_id(template.id, resource="Entity template")
         print(f"Created template: {template.name} ({template.id})")
 
-        fetched = client.templates.get_template(template.id)
+        fetched = client.templates.get_template(created_template_id)
         print(f"Fetched template: {fetched.name}, defaults -> manufacturer={fetched.defaultManufacturer}")
 
         updated = client.templates.update_template(
-            template.id,
-            ItemTemplateUpdate(
-                id=template.id,
+            created_template_id,
+            EntityTemplateUpdate(
+                id=created_template_id,
                 name=f"Laptop Template {ts} v2",
                 description="Updated reusable template for laptop assets",
                 notes="Updated by template_management.py",
@@ -139,29 +142,28 @@ def main() -> None:
                 defaultInsured=True,
                 defaultLifetimeWarranty=False,
                 defaultWarrantyDetails="36 months onsite warranty",
-                defaultLabelIds=[label.id],
-                defaultLocationId=location.id,
+                defaultTagIds=[created_label_id],
+                defaultLocationId=created_location_id,
                 includePurchaseFields=True,
                 includeWarrantyFields=True,
                 includeSoldFields=False,
-                fields=[
-                    TemplateField(name="Asset Owner", type=TemplateFieldType.TypeText.value, textValue="Engineering")
-                ],
+                fields=[TemplateField(name="Asset Owner", type=TemplateFieldType.TypeText, textValue="Engineering")],
             ),
         )
         print(f"Updated template name: {updated.name}")
 
-        created_item = client.templates.create_item_from_template(
-            template.id,
-            ItemTemplateCreateItemRequest(
+        created_item = client.templates.create_entity_from_template(
+            created_template_id,
+            EntityTemplateCreateItemRequest(
                 name=f"Template-Created Laptop {ts}",
-                locationId=location.id,
-                labelIds=[label.id],
+                parentId=created_location_id,
+                entityTypeId=item_type.id,
+                tagIds=[created_label_id],
                 description="Item created using template endpoint",
                 quantity=1,
             ),
         )
-        created_item_id = created_item.id
+        created_item_id = require_id(created_item.id, resource="Template-created entity")
         print(f"Created item from template: {created_item.name} ({created_item.id})")
 
         after = client.templates.get_all_templates()
@@ -169,7 +171,7 @@ def main() -> None:
 
     finally:
         if created_item_id:
-            client.items.delete_item(created_item_id)
+            client.entities.delete_entity(created_item_id)
             print(f"Deleted created item: {created_item_id}")
 
         if created_template_id:
@@ -177,11 +179,11 @@ def main() -> None:
             print(f"Deleted created template: {created_template_id}")
 
         if created_label_id:
-            client.labels.delete_label(created_label_id)
+            client.tags.delete_tag(created_label_id)
             print(f"Deleted created label: {created_label_id}")
 
         if created_location_id:
-            client.locations.delete_location(created_location_id)
+            client.entities.delete_entity(created_location_id)
             print(f"Deleted created location: {created_location_id}")
 
 

@@ -1,7 +1,7 @@
-"""Example script that shows how to create item labels from a list of items from homebox.
+"""Example script that creates labels for item-like Homebox entities.
 
-Script gets the list of locations, picks the first location,
-gets the items in that location and creates a label for each item.
+The script selects a populated location-like entity, gets its child entities,
+and creates a label for each non-location child.
 Labels are saved as png files in the current directory.
 
 In order to run this script, you need to have the following environment variables set:
@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+
+from _v26 import get_location_entities, require_id
 
 from homebox import HomeboxClient
 
@@ -63,13 +65,13 @@ def main() -> None:
 
     client = _build_client()
 
-    locations = client.locations.get_all_locations()
+    locations = get_location_entities(client)
     if not locations:
         print("No locations found. Create at least one location with items first.")
         return
     print(f"Found {len(locations)} location(s). Looking for items in these locations...")
     for location in locations:
-        if location.itemCount > 0:
+        if (location.itemCount or 0) > 0:
             break
     else:
         print("No locations with items found. Create at least one location with items first.")
@@ -77,8 +79,11 @@ def main() -> None:
 
     print(f"Using location: {location.name} ({location.id})")
 
-    page = client.items.query_all_items(locations=[location.id], page=1, pageSize=200)
-    items = page.items or []
+    location_id = require_id(location.id, resource="Location entity")
+    page = client.entities.query_all_entities(parentIds=[location_id], page=1, pageSize=200)
+    items = [
+        entity for entity in page.items or [] if entity.entityType is None or entity.entityType.isLocation is not True
+    ]
     if not items:
         print("No items found in this location.")
         return

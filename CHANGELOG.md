@@ -1,3 +1,17 @@
+# v 0.6.0
+
+Upgrade the client to Homebox API v0.26.0.
+
+* added first-class support for the unified entity API and entity types:
+	* entity CRUD, queries, tree, custom fields, CSV import/export, attachments, duplication, paths, and maintenance
+	* entity-type listing, creation, updates, and deletion
+* added asynchronous collection export/import job support, including artifact downloads
+* added user password-reset and personal API-key endpoints
+* updated tag models for v26 hierarchy and icon fields
+* updated barcode products and template item creation to use v26 entity contracts
+* retained legacy `items` and `locations` clients as compatibility adapters over `/v1/entities`
+* migrated runnable examples to entity/type discovery and the v26 entity routes
+
 # v 0.5.1
 
 Bugfix release.

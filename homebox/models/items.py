@@ -211,6 +211,7 @@ class ItemCreate(BaseModel):
         populate_by_name=True,
     )
     description: Optional[str] = Field(default=None, max_length=1000)
+    entityTypeId: Optional[str] = None
     tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
     locationId: Optional[str] = Field(default=None, description="Edges")
@@ -225,6 +226,7 @@ class ItemPatch(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    entityTypeId: Optional[str] = None
     id: Optional[str] = None
     tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
@@ -241,6 +243,7 @@ class ItemUpdate(BaseModel):
     archived: Optional[bool] = None
     assetId: Optional[str] = None
     description: Optional[str] = Field(default=None, max_length=1000)
+    entityTypeId: Optional[str] = None
     fields: Optional[List[ItemFieldUpdate]] = None
     id: Optional[str] = None
     insured: Optional[bool] = None
@@ -293,9 +296,14 @@ class ItemSummary(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_labels(cls, data):
-        """Backfill ``labels`` from ``tags`` when only tag data is returned."""
-        if isinstance(data, dict) and "labels" not in data and "tags" in data:
-            data["labels"] = data["tags"]
+        """Backfill legacy item names from a v0.26 entity response."""
+        if isinstance(data, dict):
+            if "labels" not in data and "tags" in data:
+                data["labels"] = data["tags"]
+            if "location" not in data and "parent" in data:
+                data["location"] = data["parent"]
+            if "soldTime" not in data and "soldDate" in data:
+                data["soldTime"] = data["soldDate"]
         return data
 
 
@@ -341,9 +349,18 @@ class ItemOut(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _sync_legacy_labels(cls, data):
-        """Backfill ``labels`` from ``tags`` when only tag data is returned."""
-        if isinstance(data, dict) and "labels" not in data and "tags" in data:
-            data["labels"] = data["tags"]
+        """Backfill legacy item names from a v0.26 entity response."""
+        if isinstance(data, dict):
+            if "labels" not in data and "tags" in data:
+                data["labels"] = data["tags"]
+            if "location" not in data and "parent" in data:
+                data["location"] = data["parent"]
+            if "purchaseTime" not in data and "purchaseDate" in data:
+                data["purchaseTime"] = data["purchaseDate"]
+            if "soldTime" not in data and "soldDate" in data:
+                data["soldTime"] = data["soldDate"]
+            if "syncChildItemsLocations" not in data and "syncChildEntityLocations" in data:
+                data["syncChildItemsLocations"] = data["syncChildEntityLocations"]
         return data
 
 

@@ -7,6 +7,22 @@ importing from ``homebox.models`` as they did before the refactor.
 from __future__ import annotations
 
 from .currencies import Currency
+from .entities import (
+    EntityCreate,
+    EntityFieldData,
+    EntityListResult,
+    EntityOut,
+    EntityPatch,
+    EntityPath,
+    EntitySummary,
+    EntityTemplateSummary,
+    EntityTypeCreate,
+    EntityTypeSummary,
+    EntityTypeUpdate,
+    EntityUpdate,
+    ExternalAttachmentRequest,
+)
+from .exports import ExportOut, ExportResults
 from .groups import Group, GroupStatistics, GroupUpdate, TotalsByOrganizer, ValueOverTime, ValueOverTimeEntry
 from .items import (
     DuplicateOptions,
@@ -27,8 +43,12 @@ from .maintenance import MaintenanceEntry, MaintenanceEntryCreate, MaintenanceEn
 from .notifiers import NotifierCreate, NotifierOut, NotifierUpdate
 from .products import BarcodeProduct
 from .services import Latest, UserRegistration
-from .tags import TagCreate, TagOut, TagSummary
+from .tags import TagCreate, TagOut, TagSummary, TagUpdate
 from .templates import (
+    EntityTemplateCreate,
+    EntityTemplateCreateItemRequest,
+    EntityTemplateOut,
+    EntityTemplateUpdate,
     ItemTemplateCreate,
     ItemTemplateCreateItemRequest,
     ItemTemplateOut,
@@ -42,13 +62,27 @@ from .templates import (
 from .types import (
     AttachmentType,
     AuthRole,
+    EntityFieldType,
+    EntityPathType,
+    ExportKind,
+    ExportStatus,
     ItemFieldType,
     ItemType,
     MaintenanceFilterStatus,
     TemplateFieldType,
     UserRole,
 )
-from .users import UserOut, UserSettings, UserSummary, UserUpdate
+from .users import (
+    APIKeyCreate,
+    APIKeyCreatedOut,
+    APIKeyOut,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    UserOut,
+    UserSettings,
+    UserSummary,
+    UserUpdate,
+)
 from .v1 import (
     ActionAmountResult,
     APISummary,
@@ -71,6 +105,9 @@ from .validate import ErrorResponse
 __all__ = [
     "APISummary",
     "ActionAmountResult",
+    "APIKeyCreate",
+    "APIKeyCreatedOut",
+    "APIKeyOut",
     "AuthRole",
     "BarcodeProduct",
     "Build",
@@ -78,7 +115,31 @@ __all__ = [
     "CreateRequest",
     "Currency",
     "DuplicateOptions",
+    "EntityCreate",
+    "EntityFieldData",
+    "EntityFieldType",
+    "EntityListResult",
+    "EntityOut",
+    "EntityPatch",
+    "EntityPath",
+    "EntityPathType",
+    "EntitySummary",
+    "EntityTemplateCreate",
+    "EntityTemplateCreateItemRequest",
+    "EntityTemplateOut",
+    "EntityTemplateSummary",
+    "EntityTemplateUpdate",
+    "EntityTypeCreate",
+    "EntityTypeSummary",
+    "EntityTypeUpdate",
+    "EntityUpdate",
     "ErrorResponse",
+    "ExportKind",
+    "ExportOut",
+    "ExportResults",
+    "ExportStatus",
+    "ExternalAttachmentRequest",
+    "ForgotPasswordRequest",
     "Group",
     "GroupInvitation",
     "GroupAcceptInvitationResponse",
@@ -110,6 +171,7 @@ __all__ = [
     "TagCreate",
     "TagOut",
     "TagSummary",
+    "TagUpdate",
     "Latest",
     "LocationCreate",
     "LocationOut",
@@ -136,6 +198,7 @@ __all__ = [
     "TotalsByOrganizer",
     "TreeItem",
     "UserOut",
+    "ResetPasswordRequest",
     "UserSettings",
     "UserSummary",
     "UserRegistration",

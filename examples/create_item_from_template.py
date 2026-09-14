@@ -1,10 +1,10 @@
-"""Example script for creating an item from an existing Homebox template.
+"""Example script for creating an entity from an existing Homebox template.
 
 This example focuses on the `POST /v1/templates/{id}/create-item` flow.
 
 In order to run this script, you need to have the following environment variables set:
 - HOMEBOX_URL: the URL of your Homebox instance (e.g. http://localhost)
-- HOMEBOX_USERNAME: the username of a user with permissions to create items
+- HOMEBOX_USERNAME: the username of a user with permissions to create entities
 - HOMEBOX_PASSWORD: the password of that user
 - HOMEBOX_TEMPLATE_ID: ID of an existing template to instantiate
 
@@ -17,8 +17,10 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
+from _v26 import get_location_entities, require_entity_type, require_id
+
 from homebox import HomeboxClient
-from homebox.models import ItemTemplateCreateItemRequest
+from homebox.models import EntityTemplateCreateItemRequest
 
 
 def _load_dotenv() -> None:
@@ -61,37 +63,40 @@ def main() -> None:
     template_id = _require_env("HOMEBOX_TEMPLATE_ID")
     ts = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
 
-    # Reuse an existing location as the create-item payload requires one.
-    locations = client.locations.get_all_locations(filterChildren=False)
+    # Reuse an existing location-like entity as the template payload requires a parent.
+    locations = get_location_entities(client)
     if not locations:
         raise RuntimeError("No locations found. Create at least one location before running this example.")
 
-    location_id = locations[0].id
-    created_item_id: str | None = None
+    location_id = require_id(locations[0].id, resource="Location entity")
+    entity_type = require_entity_type(client, is_location=False)
+    created_entity_id: str | None = None
 
     try:
-        created_item = client.templates.create_item_from_template(
+        created_entity = client.templates.create_entity_from_template(
             template_id,
-            ItemTemplateCreateItemRequest(
-                name=f"Template Item {ts}",
-                locationId=location_id,
+            EntityTemplateCreateItemRequest(
+                name=f"Template Entity {ts}",
+                parentId=location_id,
+                entityTypeId=entity_type.id,
                 quantity=1,
                 description="Created from existing template via API",
             ),
         )
-        created_item_id = created_item.id
-        print(f"Created item from template {template_id}: {created_item.name} ({created_item.id})")
+        created_entity_id = require_id(created_entity.id, resource="Template-created entity")
+        print(f"Created entity from template {template_id}: {created_entity.name} ({created_entity.id})")
 
-        # Show the ancestry path of the new item (location → item).
-        path = client.items.get_item_path(created_item.id)
-        print("Item path:")
+        # Show the ancestry path of the new entity (location → entity).
+        path = client.entities.get_entity_path(created_entity_id)
+        print("Entity path:")
         for node in path:
-            print(f"  [{node.type}] {node.name} ({node.id})")
+            node_type = node.type.value if node.type else "unknown"
+            print(f"  [{node_type}] {node.name} ({node.id})")
 
     finally:
-        if created_item_id:
-            client.items.delete_item(created_item_id)
-            print(f"Deleted created item: {created_item_id}")
+        if created_entity_id:
+            client.entities.delete_entity(created_entity_id)
+            print(f"Deleted created entity: {created_entity_id}")
 
 
 if __name__ == "__main__":

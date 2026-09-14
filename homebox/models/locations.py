@@ -51,6 +51,7 @@ class LocationCreate(BaseModel):
         populate_by_name=True,
     )
     description: Optional[str] = None
+    entityTypeId: Optional[str] = None
     name: Optional[str] = None
     parentId: Optional[str] = None
 
@@ -89,6 +90,7 @@ class LocationUpdate(BaseModel):
         populate_by_name=True,
     )
     description: Optional[str] = None
+    entityTypeId: Optional[str] = None
     id: Optional[str] = None
     name: Optional[str] = None
     parentId: Optional[str] = None

@@ -1,6 +1,6 @@
-"""Example script that shows how to create a new location in homebox and add several items to that location.
+"""Example script that creates location-like and item-like entities in Homebox.
 
-Exemplifies how to add images to items, and how to use the bulk item creation endpoint.
+It demonstrates attachments, duplication, CSV entity import/export, and labels.
 Script generates a label png for the created location.
 
 In order to run this script, you need to have the following environment variables set:
@@ -20,8 +20,10 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
+from _v26 import require_entity_type, require_id
+
 from homebox import HomeboxClient
-from homebox.models import DuplicateOptions, ItemCreate, LocationCreate
+from homebox.models import DuplicateOptions, EntityCreate
 
 
 def _load_dotenv() -> None:
@@ -80,6 +82,8 @@ def _set_first_key(record: dict[str, str], keys: list[str], value: str) -> None:
 def main() -> None:
     _load_dotenv()
     client = _build_client()
+    location_type = require_entity_type(client, is_location=True)
+    item_type = require_entity_type(client, is_location=False)
 
     created_location_id: str | None = None
     created_item_ids: list[str] = []
@@ -87,37 +91,40 @@ def main() -> None:
     location_name = f"Example Storage {datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
 
     try:
-        location = client.locations.create_location(
-            LocationCreate(
+        location = client.entities.create_entity(
+            EntityCreate(
                 name=location_name,
                 description="Location created by create_location_add_items.py",
+                entityTypeId=location_type.id,
             )
         )
-        created_location_id = location.id
+        created_location_id = require_id(location.id, resource="Location entity")
+        location_name = location.name or location_name
         print(f"Created location: {location.name} ({location.id})")
 
-        featured_item = client.items.create_item(
-            ItemCreate(
+        featured_item = client.entities.create_entity(
+            EntityCreate(
                 name="Mirrorless Camera",
                 description="Featured item created individually",
+                entityTypeId=item_type.id,
                 quantity=1,
-                locationId=location.id,
+                parentId=created_location_id,
             )
         )
-        if featured_item.id:
-            created_item_ids.append(featured_item.id)
+        featured_item_id = require_id(featured_item.id, resource="Featured entity")
+        created_item_ids.append(featured_item_id)
         print(f"Created featured item: {featured_item.name} ({featured_item.id})")
 
         image = _tiny_png()
-        client.items.create_item_attachment(
-            featured_item.id,
+        client.entities.create_attachment(
+            featured_item_id,
             file=image,
             type="photo",
             primary=True,
             name="front.png",
         )
-        client.items.create_item_attachment(
-            featured_item.id,
+        client.entities.create_attachment(
+            featured_item_id,
             file=image,
             type="photo",
             primary=False,
@@ -126,14 +133,15 @@ def main() -> None:
         print("Attached two images to the featured item")
 
         # Show the ancestry path of the featured item (location → item).
-        path = client.items.get_item_path(featured_item.id)
+        path = client.entities.get_entity_path(featured_item_id)
         print("Item path:")
         for node in path:
-            print(f"  [{node.type}] {node.name} ({node.id})")
+            node_type = node.type.value if node.type else "unknown"
+            print(f"  [{node_type}] {node.name} ({node.id})")
 
         # Duplicate the featured item and keep track of the copy for cleanup.
-        duplicate = client.items.duplicate_item(
-            featured_item.id,
+        duplicate = client.entities.duplicate_entity(
+            featured_item_id,
             DuplicateOptions(
                 copyAttachments=True,
                 copyCustomFields=True,
@@ -151,7 +159,7 @@ def main() -> None:
             {"name": "SD Card", "description": "128GB UHS-II", "quantity": "4"},
         ]
 
-        exported_csv = client.items.export_items()
+        exported_csv = client.entities.export_entities()
         headers = next(csv.reader([exported_csv.splitlines()[0]]))
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=headers)
@@ -161,23 +169,23 @@ def main() -> None:
             _set_first_key(row, ["HB.name"], item["name"])
             _set_first_key(row, ["HB.description"], item["description"])
             _set_first_key(row, ["HB.quantity", "HB.qty"], item["quantity"])
-            _set_first_key(row, ["HB.location", "HB.locationname"], location.name)
+            _set_first_key(row, ["HB.location", "HB.locationname"], location_name)
             writer.writerow(row)
-        client.items.import_items(out.getvalue().encode("utf-8"))
-        print(f"Bulk-created {len(bulk_items)} items using import_items()")
+        client.entities.import_entities(out.getvalue().encode("utf-8"))
+        print(f"Bulk-created {len(bulk_items)} entities using import_entities()")
 
-        label_data = client.labelmaker.get_location_label(location.id, print=False)
+        label_data = client.labelmaker.get_location_label(created_location_id, print=False)
         output_file = Path.cwd() / f"{_safe_name(location_name)}_label.png"
         output_file.write_bytes(label_data)
         print(f"Saved location label to: {output_file}")
 
     finally:
         for item_id in created_item_ids:
-            client.items.delete_item(item_id)
-            print(f"Deleted item: {item_id}")
+            client.entities.delete_entity(item_id)
+            print(f"Deleted entity: {item_id}")
 
         if created_location_id:
-            client.locations.delete_location(created_location_id)
+            client.entities.delete_entity(created_location_id)
             print(f"Deleted location: {created_location_id}")
 
 

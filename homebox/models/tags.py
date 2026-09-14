@@ -48,7 +48,15 @@ class TagCreate(BaseModel):
     )
     color: Optional[str] = None
     description: Optional[str] = Field(default=None, max_length=1000)
+    icon: Optional[str] = Field(default=None, max_length=255)
     name: str = Field(..., min_length=1, max_length=255)
+    parentId: Optional[str] = None
+
+
+class TagUpdate(TagCreate):
+    """Request payload for updating a tag."""
+
+    id: Optional[str] = None
 
 
 class TagOut(BaseModel):
@@ -58,14 +66,20 @@ class TagOut(BaseModel):
         populate_by_name=True,
     )
     color: Optional[str] = None
+    children: Optional[list["TagSummary"]] = None
     createdAt: Optional[str] = None
     description: Optional[str] = None
+    icon: Optional[str] = None
     id: Optional[str] = None
     name: Optional[str] = None
+    parent: Optional["TagSummary"] = None
+    parentId: Optional[str] = None
     updatedAt: Optional[str] = None
 
 
 TagSummary = TagOut
+
+TagOut.model_rebuild()
 
 Tag.model_rebuild(raise_errors=False)
 
@@ -73,4 +87,5 @@ __all__ = [
     "TagCreate",
     "TagOut",
     "TagSummary",
+    "TagUpdate",
 ]

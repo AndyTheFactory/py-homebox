@@ -154,11 +154,26 @@ class ItemTemplateCreateItemRequest(BaseModel):
         populate_by_name=True,
     )
     description: Optional[str] = Field(default=None, max_length=1000)
+    entityTypeId: Optional[str] = None
     tagIds: Optional[List[str]] = None
     labelIds: Optional[List[str]] = None
-    locationId: str
+    locationId: Optional[str] = None
     name: str = Field(..., min_length=1, max_length=255)
+    parentId: Optional[str] = None
     quantity: Optional[float] = None
+
+
+class EntityTemplateCreateItemRequest(BaseModel):
+    """v0.26 payload for creating an entity from a template."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    description: Optional[str] = Field(default=None, max_length=1000)
+    entityTypeId: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=255)
+    parentId: str
+    quantity: Optional[float] = None
+    tagIds: Optional[List[str]] = None
 
 
 __all__ = [
@@ -167,9 +182,17 @@ __all__ = [
     "ItemTemplateOut",
     "ItemTemplateSummary",
     "ItemTemplateUpdate",
+    "EntityTemplateCreateItemRequest",
     "TemplateField",
     "TemplateTagSummary",
     "TemplateLocationSummary",
 ]
 
 TemplateLabelSummary = TemplateTagSummary
+
+# v0.26 renamed item templates to entity templates without changing the
+# template endpoint or the common template fields.
+EntityTemplateCreate = ItemTemplateCreate
+EntityTemplateOut = ItemTemplateOut
+EntityTemplateSummary = ItemTemplateSummary
+EntityTemplateUpdate = ItemTemplateUpdate

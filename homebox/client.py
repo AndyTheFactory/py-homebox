@@ -9,12 +9,29 @@ import requests
 
 from homebox.models import (
     ActionAmountResult,
+    APIKeyCreate,
+    APIKeyCreatedOut,
+    APIKeyOut,
     APISummary,
     BarcodeProduct,
     ChangePassword,
     CreateRequest,
     Currency,
     DuplicateOptions,
+    EntityCreate,
+    EntityListResult,
+    EntityOut,
+    EntityPatch,
+    EntityPath,
+    EntityTemplateCreateItemRequest,
+    EntityTypeCreate,
+    EntityTypeSummary,
+    EntityTypeUpdate,
+    EntityUpdate,
+    ExportOut,
+    ExportResults,
+    ExternalAttachmentRequest,
+    ForgotPasswordRequest,
     Group,
     GroupAcceptInvitationResponse,
     GroupInvitation,
@@ -52,9 +69,11 @@ from homebox.models import (
     NotifierOut,
     NotifierUpdate,
     PaginationResultRepoItemSummary,
+    ResetPasswordRequest,
     TagCreate,
     TagOut,
     TagSummary,
+    TagUpdate,
     TokenResponse,
     TotalsByOrganizer,
     TreeItem,
@@ -82,6 +101,9 @@ class HomeboxClient:
         headers: HTTP headers sent with every request.
         actions: Sub-client for bulk action endpoints.
         assets: Sub-client for asset-ID lookup endpoints.
+        entities: Sub-client for unified v0.26 entity endpoints.
+        entity_types: Sub-client for v0.26 entity-type endpoints.
+        group_exports: Sub-client for asynchronous collection exports/imports.
         groups: Sub-client for group and statistics endpoints.
         items: Sub-client for item CRUD and attachment endpoints.
         labels: Sub-client for label endpoints.
@@ -128,6 +150,9 @@ class HomeboxClient:
         self.actions = ActionsClient(self)
         self.assets = AssetsClient(self)
         self.groups = GroupsClient(self)
+        self.entities = EntitiesClient(self)
+        self.entity_types = EntityTypesClient(self)
+        self.group_exports = GroupExportsClient(self)
         self.items = ItemsClient(self)
         self.tags = TagsClient(self)
         self.labels = LabelsClient(self)
@@ -366,7 +391,11 @@ class AssetsClient:
         """Initialise the assets sub-client with the shared root client."""
         self.client = client
 
-    def get_item_by_asset_id(self, id: str) -> PaginationResultRepoItemSummary:
+    def get_entity_by_asset_id(self, id: str) -> EntityListResult:
+        """Look up entities by their numeric asset ID."""
+        return EntityListResult(**self.client._request("get", f"/v1/assets/{id}"))
+
+    def get_item_by_asset_id(self, id: str) -> EntityListResult:
         """Look up an item by its numeric asset ID.
 
         Args:
@@ -376,7 +405,7 @@ class AssetsClient:
             PaginationResultRepoItemSummary: Paginated result containing the
                 matching item summary, if found.
         """
-        return PaginationResultRepoItemSummary(**self.client._request("get", f"/v1/assets/{id}"))
+        return self.get_entity_by_asset_id(id)
 
 
 class GroupsClient:
@@ -487,7 +516,8 @@ class GroupsClient:
                 ID, name, and aggregated total value.
         """
         data = self.client._request("get", "/v1/groups/statistics/locations")
-
+        if data is None:
+            return []
         return [TotalsByOrganizer(**item) for item in data["data"]]
 
     def get_purchase_price_statistics(self, start: str | None = None, end: str | None = None) -> ValueOverTime:
@@ -511,6 +541,222 @@ class GroupsClient:
         return ValueOverTime(**self.client._request("get", "/v1/groups/statistics/purchase-price", params=params))
 
 
+class EntitiesClient:
+    """Sub-client for the unified entity API introduced in Homebox v0.26."""
+
+    def __init__(self, client: HomeboxClient):
+        self.client = client
+
+    @staticmethod
+    def _unwrap_entity_response(response: dict[str, Any]) -> dict[str, Any]:
+        """Normalize wrapped and direct entity response payloads."""
+        if not isinstance(response, dict):
+            return {}
+        for key in ("item", "data"):
+            wrapped = response.get(key)
+            if isinstance(wrapped, dict):
+                return wrapped
+        return response
+
+    def query_all_entities(
+        self,
+        q: str | None = None,
+        page: int | None = None,
+        pageSize: int | None = None,
+        tags: list[str] | None = None,
+        parentIds: list[str] | None = None,
+    ) -> EntityListResult:
+        """Search and paginate all entities in the current group."""
+        params = {
+            key: value
+            for key, value in {
+                "q": q,
+                "page": page,
+                "pageSize": pageSize,
+                "tags": tags,
+                "parentIds": parentIds,
+            }.items()
+            if value is not None
+        }
+        return EntityListResult(**self.client._request("get", "/v1/entities", params=params))
+
+    def create_entity(self, data: EntityCreate) -> EntityOut:
+        """Create an entity."""
+        response = self.client._request("post", "/v1/entities", data=data.model_dump(exclude_none=True))
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def export_entities(self) -> str:
+        """Export all entities as CSV text."""
+        return self.client._get("/v1/entities/export", binary=False)
+
+    def get_all_custom_field_names(self) -> list[str]:
+        """Return all distinct entity custom-field names."""
+        response = self.client._request("get", "/v1/entities/fields")
+        return response.get("data", [])
+
+    def get_all_custom_field_values(self, field: str) -> list[str]:
+        """Return distinct values for one entity custom field."""
+        response = self.client._request("get", "/v1/entities/fields/values", params={"field": field})
+        return response.get("data", [])
+
+    def import_entities(self, csv: bytes):
+        """Import entities from CSV bytes."""
+        files = {"csv": ("entities.csv", csv, "text/csv")}
+        self.client._request("post", "/v1/entities/import", files=files)
+
+    def get_entities_tree(self, withItems: bool | None = None) -> list[TreeItem]:
+        """Return the entity location tree."""
+        params = {"withItems": withItems} if withItems is not None else {}
+        response = self.client._request("get", "/v1/entities/tree", params=params)
+        return [TreeItem(**item) for item in response.get("data", [])]
+
+    def get_entity(self, id: str) -> EntityOut:
+        """Return one entity by ID."""
+        response = self.client._request("get", f"/v1/entities/{id}")
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def update_entity(self, id: str, data: EntityUpdate) -> EntityOut:
+        """Fully update an entity."""
+        response = self.client._request(
+            "put", f"/v1/entities/{id}", data=data.model_dump(mode="json", exclude_none=True)
+        )
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def patch_entity(self, id: str, data: EntityPatch) -> EntityOut:
+        """Partially update an entity."""
+        response = self.client._request("patch", f"/v1/entities/{id}", data=data.model_dump(exclude_none=True))
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def delete_entity(self, id: str):
+        """Delete an entity."""
+        self.client._request("delete", f"/v1/entities/{id}")
+
+    def create_attachment(
+        self,
+        id: str,
+        file: bytes,
+        type: str | None = None,
+        primary: bool | None = None,
+        name: str | None = None,
+    ) -> EntityOut:
+        """Upload an attachment to an entity."""
+        files = {"file": (name or "attachment", file)}
+        form = {
+            key: value for key, value in {"type": type, "primary": primary, "name": name}.items() if value is not None
+        }
+        response = self.client._request("post", f"/v1/entities/{id}/attachments", data=form, files=files)
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def create_external_attachment(self, id: str, data: ExternalAttachmentRequest) -> EntityOut:
+        """Link an entity to an externally stored document."""
+        response = self.client._request(
+            "post", f"/v1/entities/{id}/attachments/external", data=data.model_dump(exclude_none=True)
+        )
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def get_attachment(self, id: str, attachment_id: str) -> bytes:
+        """Download an entity attachment."""
+        return self.client._get(f"/v1/entities/{id}/attachments/{attachment_id}", binary=True)
+
+    def update_attachment(self, id: str, attachment_id: str, data: ItemAttachmentUpdate) -> EntityOut:
+        """Update entity attachment metadata."""
+        response = self.client._request(
+            "put", f"/v1/entities/{id}/attachments/{attachment_id}", data=data.model_dump(exclude_none=True)
+        )
+        payload = self._unwrap_entity_response(response)
+        if not any(key in payload for key in ("id", "name", "tags", "parent", "attachments")):
+            return self.get_entity(id)
+        return EntityOut(**payload)
+
+    def delete_attachment(self, id: str, attachment_id: str):
+        """Delete an entity attachment."""
+        self.client._request("delete", f"/v1/entities/{id}/attachments/{attachment_id}")
+
+    def duplicate_entity(self, id: str, data: DuplicateOptions) -> EntityOut:
+        """Duplicate an entity."""
+        response = self.client._request("post", f"/v1/entities/{id}/duplicate", data=data.model_dump(exclude_none=True))
+        return EntityOut(**self._unwrap_entity_response(response))
+
+    def get_maintenance_log(
+        self, id: str, status: MaintenanceFilterStatus | None = None
+    ) -> list[MaintenanceEntryWithDetails]:
+        """Return maintenance entries for an entity."""
+        params = {"status": status.value} if status else {}
+        response = self.client._request("get", f"/v1/entities/{id}/maintenance", params=params)
+        return [MaintenanceEntryWithDetails(**item) for item in response.get("data", [])]
+
+    def create_maintenance_entry(self, id: str, data: MaintenanceEntryCreate) -> MaintenanceEntry:
+        """Create a maintenance entry for an entity."""
+        return MaintenanceEntry(
+            **self.client._request("post", f"/v1/entities/{id}/maintenance", data=data.model_dump(exclude_none=True))
+        )
+
+    def get_entity_path(self, id: str) -> list[EntityPath]:
+        """Return the ancestry path for an entity."""
+        response = self.client._request("get", f"/v1/entities/{id}/path")
+        return [EntityPath(**item) for item in response.get("data", [])]
+
+
+class EntityTypesClient:
+    """Sub-client for v0.26 entity type management."""
+
+    def __init__(self, client: HomeboxClient):
+        self.client = client
+
+    def get_all_entity_types(self) -> list[EntityTypeSummary]:
+        """Return all entity types in the current group."""
+        response = self.client._request("get", "/v1/entity-types")
+        return [EntityTypeSummary(**item) for item in response.get("data", [])]
+
+    def create_entity_type(self, data: EntityTypeCreate) -> EntityTypeSummary:
+        """Create an entity type."""
+        return EntityTypeSummary(
+            **self.client._request("post", "/v1/entity-types", data=data.model_dump(exclude_none=True))
+        )
+
+    def update_entity_type(self, id: str, data: EntityTypeUpdate) -> EntityTypeSummary:
+        """Update an entity type."""
+        return EntityTypeSummary(
+            **self.client._request("put", f"/v1/entity-types/{id}", data=data.model_dump(exclude_none=True))
+        )
+
+    def delete_entity_type(self, id: str):
+        """Delete an entity type."""
+        self.client._request("delete", f"/v1/entity-types/{id}")
+
+
+class GroupExportsClient:
+    """Sub-client for asynchronous v0.26 collection exports and imports."""
+
+    def __init__(self, client: HomeboxClient):
+        self.client = client
+
+    def list_exports(self) -> ExportResults:
+        """List export and import jobs for the current group."""
+        return ExportResults(**self.client._request("get", "/v1/group/exports"))
+
+    def start_export(self) -> ExportOut:
+        """Start an asynchronous collection export."""
+        return ExportOut(**self.client._request("post", "/v1/group/exports"))
+
+    def get_export(self, id: str) -> ExportOut:
+        """Return one export or import job."""
+        return ExportOut(**self.client._request("get", f"/v1/group/exports/{id}"))
+
+    def delete_export(self, id: str):
+        """Delete an export record and its artifact."""
+        self.client._request("delete", f"/v1/group/exports/{id}")
+
+    def download_export(self, id: str) -> bytes:
+        """Download a completed export artifact."""
+        return self.client._get(f"/v1/group/exports/{id}/download", binary=True)
+
+    def import_collection(self, file: bytes) -> ExportOut:
+        """Upload a collection archive and start an asynchronous import."""
+        files = {"file": ("homebox-export.zip", file, "application/zip")}
+        return ExportOut(**self.client._request("post", "/v1/group/import", files=files))
+
+
 class ItemsClient:
     """Sub-client for item CRUD, attachment, and maintenance-log endpoints.
 
@@ -523,11 +769,21 @@ class ItemsClient:
 
     @staticmethod
     def _normalize_tag_payload(payload: dict[str, Any]) -> dict[str, Any]:
-        """Map legacy label keys to v23 tag keys for compatibility."""
+        """Map legacy item keys to their v0.26 entity equivalents."""
         if "labelIds" in payload and "tagIds" not in payload:
             payload["tagIds"] = payload.pop("labelIds")
         else:
             payload.pop("labelIds", None)
+        if "locationId" in payload and "parentId" not in payload:
+            payload["parentId"] = payload.pop("locationId")
+        else:
+            payload.pop("locationId", None)
+        if "purchaseTime" in payload and "purchaseDate" not in payload:
+            payload["purchaseDate"] = payload.pop("purchaseTime")
+        if "soldTime" in payload and "soldDate" not in payload:
+            payload["soldDate"] = payload.pop("soldTime")
+        if "syncChildItemsLocations" in payload and "syncChildEntityLocations" not in payload:
+            payload["syncChildEntityLocations"] = payload.pop("syncChildItemsLocations")
         return payload
 
     @staticmethod
@@ -581,11 +837,10 @@ class ItemsClient:
         tag_filters = tags if tags is not None else labels
         if tag_filters:
             params["tags"] = tag_filters
-        if locations:
-            params["locations"] = locations
-        if parentIds:
-            params["parentIds"] = parentIds
-        return PaginationResultRepoItemSummary(**self.client._request("get", "/v1/items", params=params))
+        entity_parents = parentIds if parentIds is not None else locations
+        if entity_parents:
+            params["parentIds"] = entity_parents
+        return PaginationResultRepoItemSummary(**self.client._request("get", "/v1/entities", params=params))
 
     def create_item(self, data: ItemCreate) -> ItemSummary:
         """Create a new item.
@@ -599,7 +854,7 @@ class ItemsClient:
             ItemSummary: Summary representation of the newly created item.
         """
         payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
-        return ItemSummary(**self.client._request("post", "/v1/items", data=payload))
+        return ItemSummary(**self.client._request("post", "/v1/entities", data=payload))
 
     def export_items(self) -> str:
         """Export all items as a CSV document.
@@ -607,7 +862,7 @@ class ItemsClient:
         Returns:
             str: Raw CSV text that can be written to a file or parsed directly.
         """
-        return self.client._get("/v1/items/export", binary=False)
+        return self.client._get("/v1/entities/export", binary=False)
 
     def get_all_custom_field_names(self) -> list[str]:
         """Return the distinct custom field names used across all items.
@@ -615,16 +870,17 @@ class ItemsClient:
         Returns:
             list[str]: Sorted list of custom field name strings.
         """
-        rest = self.client._request("get", "/v1/items/fields")
+        rest = self.client._request("get", "/v1/entities/fields")
         return rest.get("data", [])
 
-    def get_all_custom_field_values(self) -> list[str]:
+    def get_all_custom_field_values(self, field: str | None = None) -> list[str]:
         """Return the distinct values stored in custom text fields across all items.
 
         Returns:
             list[str]: List of unique custom field value strings.
         """
-        rest = self.client._request("get", "/v1/items/fields/values")
+        params = {"field": field} if field is not None else {}
+        rest = self.client._request("get", "/v1/entities/fields/values", params=params)
         return rest.get("data", [])
 
     def import_items(self, csv: bytes):
@@ -637,7 +893,7 @@ class ItemsClient:
                 file opened in binary mode).
         """
         files = {"csv": ("items.csv", csv, "text/csv")}
-        self.client._request("post", "/v1/items/import", files=files)
+        self.client._request("post", "/v1/entities/import", files=files)
 
     def get_item(self, id: str) -> ItemOut:
         """Return the full details of a single item.
@@ -649,7 +905,7 @@ class ItemsClient:
             ItemOut: Full item representation including attachments, custom
                 fields, maintenance log, and nested location/label information.
         """
-        response = self.client._request("get", f"/v1/items/{id}")
+        response = self.client._request("get", f"/v1/entities/{id}")
         return ItemOut(**self._unwrap_item_response(response))
 
     def update_item(self, id: str, data: ItemUpdate) -> ItemOut:
@@ -664,7 +920,7 @@ class ItemsClient:
             ItemOut: Updated full item representation.
         """
         payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
-        response = self.client._request("put", f"/v1/items/{id}", data=payload)
+        response = self.client._request("put", f"/v1/entities/{id}", data=payload)
         return ItemOut(**self._unwrap_item_response(response))
 
     def delete_item(self, id: str):
@@ -673,7 +929,7 @@ class ItemsClient:
         Args:
             id: UUID of the item to delete.
         """
-        self.client._request("delete", f"/v1/items/{id}")
+        self.client._request("delete", f"/v1/entities/{id}")
 
     def patch_item(self, id: str, data: ItemPatch) -> ItemOut:
         """Partially update an item (only the provided fields are changed).
@@ -686,7 +942,7 @@ class ItemsClient:
             ItemOut: Updated full item representation.
         """
         payload = self._normalize_tag_payload(data.model_dump(exclude_none=True))
-        response = self.client._request("patch", f"/v1/items/{id}", data=payload)
+        response = self.client._request("patch", f"/v1/entities/{id}", data=payload)
         return ItemOut(**self._unwrap_item_response(response))
 
     def create_item_attachment(
@@ -720,7 +976,7 @@ class ItemsClient:
             data["primary"] = primary
         if name:
             data["name"] = name
-        response = self.client._request("post", f"/v1/items/{id}/attachments", data=data, files=files)
+        response = self.client._request("post", f"/v1/entities/{id}/attachments", data=data, files=files)
         return ItemOut(**self._unwrap_item_response(response))
 
     def get_item_attachment(self, id: str, attachment_id: str) -> bytes:
@@ -733,7 +989,7 @@ class ItemsClient:
         Returns:
             bytes: Raw bytes of the attachment.
         """
-        return self.client._get(f"/v1/items/{id}/attachments/{attachment_id}", binary=True)
+        return self.client._get(f"/v1/entities/{id}/attachments/{attachment_id}", binary=True)
 
     def update_item_attachment(self, id: str, attachment_id: str, data: ItemAttachmentUpdate) -> ItemOut:
         """Update metadata for an existing item attachment.
@@ -746,7 +1002,7 @@ class ItemsClient:
         Returns:
             ItemOut: Updated full item representation.
         """
-        response = self.client._request("put", f"/v1/items/{id}/attachments/{attachment_id}", data=data.model_dump())
+        response = self.client._request("put", f"/v1/entities/{id}/attachments/{attachment_id}", data=data.model_dump())
         payload = self._unwrap_item_response(response)
 
         # v24-compatible fallback: if update endpoint doesn't return the item,
@@ -763,7 +1019,7 @@ class ItemsClient:
             id: UUID of the item.
             attachment_id: UUID of the attachment to delete.
         """
-        self.client._request("delete", f"/v1/items/{id}/attachments/{attachment_id}")
+        self.client._request("delete", f"/v1/entities/{id}/attachments/{attachment_id}")
 
     def duplicate_item(self, id: str, data: DuplicateOptions) -> ItemOut:
         """Create a duplicate of an existing item.
@@ -776,7 +1032,7 @@ class ItemsClient:
         Returns:
             ItemOut: Full representation of the newly created duplicate item.
         """
-        response = self.client._request("post", f"/v1/items/{id}/duplicate", data=data.model_dump())
+        response = self.client._request("post", f"/v1/entities/{id}/duplicate", data=data.model_dump())
         return ItemOut(**self._unwrap_item_response(response))
 
     def get_maintenance_log(
@@ -796,7 +1052,7 @@ class ItemsClient:
         params = {}
         if status:
             params["status"] = status.value
-        data = self.client._request("get", f"/v1/items/{id}/maintenance", params=params)
+        data = self.client._request("get", f"/v1/entities/{id}/maintenance", params=params)
         return [MaintenanceEntryWithDetails(**item) for item in data.get("data", [])]
 
     def create_maintenance_entry(self, id: str, data: MaintenanceEntryCreate) -> MaintenanceEntry:
@@ -810,7 +1066,9 @@ class ItemsClient:
         Returns:
             MaintenanceEntry: The newly created maintenance entry.
         """
-        return MaintenanceEntry(**self.client._request("post", f"/v1/items/{id}/maintenance", data=data.model_dump()))
+        return MaintenanceEntry(
+            **self.client._request("post", f"/v1/entities/{id}/maintenance", data=data.model_dump())
+        )
 
     def get_item_path(self, id: str) -> list[ItemPath]:
         """Return the ancestry path of an item (from root to the item itself).
@@ -824,7 +1082,7 @@ class ItemsClient:
             list[ItemPath]: Ordered list of path nodes.  Each node carries an
                 ``id``, ``name``, and ``type`` (``"location"`` or ``"item"``).
         """
-        data = self.client._request("get", f"/v1/items/{id}/path")
+        data = self.client._request("get", f"/v1/entities/{id}/path")
         return [ItemPath(**item) for item in data.get("data", [])]
 
 
@@ -871,7 +1129,7 @@ class TagsClient:
         """
         return TagOut(**self.client._request("get", f"/v1/tags/{id}"))
 
-    def update_tag(self, id: str, data: TagOut) -> TagOut:
+    def update_tag(self, id: str, data: TagUpdate | TagOut) -> TagOut:
         """Replace a tag's fields with the provided data.
 
         Args:
@@ -942,8 +1200,14 @@ class LocationsClient:
         params = {}
         if filterChildren is not None:
             params["filterChildren"] = filterChildren
-        data = self.client._request("get", "/v1/locations", params=params)
-        return [LocationOutCount(**item) for item in data["data"]]
+        data = self.client._request("get", "/v1/entities", params={})
+        items = data.get("items", data.get("data", []))
+        locations = [
+            item for item in items if "entityType" not in item or item.get("entityType", {}).get("isLocation") is True
+        ]
+        if filterChildren:
+            locations = [item for item in locations if item.get("parent") is None]
+        return [LocationOutCount(**item) for item in locations]
 
     def create_location(self, data: LocationCreate) -> LocationSummary:
         """Create a new location.
@@ -956,7 +1220,7 @@ class LocationsClient:
         Returns:
             LocationSummary: Summary representation of the newly created location.
         """
-        return LocationSummary(**self.client._request("post", "/v1/locations", data=data.model_dump()))
+        return LocationSummary(**self.client._request("post", "/v1/entities", data=data.model_dump(exclude_none=True)))
 
     def get_locations_tree(self, withItems: bool | None = None) -> list[TreeItem]:
         """Return all locations as a nested tree structure.
@@ -972,7 +1236,7 @@ class LocationsClient:
         params = {}
         if withItems:
             params["withItems"] = withItems
-        data = self.client._request("get", "/v1/locations/tree", params=params)
+        data = self.client._request("get", "/v1/entities/tree", params=params)
         return [TreeItem(**item) for item in data.get("data", [])]
 
     def get_location(self, id: str) -> LocationOut:
@@ -985,7 +1249,7 @@ class LocationsClient:
             LocationOut: Full location representation including parent summary,
                 child summaries, and total item price.
         """
-        return LocationOut(**self.client._request("get", f"/v1/locations/{id}"))
+        return LocationOut(**self.client._request("get", f"/v1/entities/{id}"))
 
     def update_location(self, id: str, data: LocationUpdate) -> LocationOut:
         """Replace a location's fields with the provided data.
@@ -997,7 +1261,7 @@ class LocationsClient:
         Returns:
             LocationOut: Updated full location representation.
         """
-        return LocationOut(**self.client._request("put", f"/v1/locations/{id}", data=data.model_dump()))
+        return LocationOut(**self.client._request("put", f"/v1/entities/{id}", data=data.model_dump(exclude_none=True)))
 
     def delete_location(self, id: str):
         """Permanently delete a location.
@@ -1005,7 +1269,7 @@ class LocationsClient:
         Args:
             id: UUID of the location to delete.
         """
-        self.client._request("delete", f"/v1/locations/{id}")
+        self.client._request("delete", f"/v1/entities/{id}")
 
 
 class MaintenanceClient:
@@ -1141,6 +1405,14 @@ class UsersClient:
         """
         self.client._request("put", "/v1/users/change-password", data=data.model_dump())
 
+    def forgot_password(self, data: ForgotPasswordRequest):
+        """Request a password-reset email."""
+        self.client._request("post", "/v1/users/forgot-password", data=data.model_dump())
+
+    def reset_password(self, data: ResetPasswordRequest):
+        """Complete a password reset using the emailed token."""
+        self.client._request("post", "/v1/users/reset-password", data=data.model_dump())
+
     def user_logout(self):
         """Invalidate the current session token on the server side."""
         self.client._request("post", "/v1/users/logout")
@@ -1254,6 +1526,21 @@ class UsersClient:
         wrapped = response.get("item", response)
         return UserSettings(**wrapped)
 
+    def get_api_keys(self) -> list[APIKeyOut]:
+        """Return API keys belonging to the current user."""
+        response = self.client._request("get", "/v1/users/self/api-keys")
+        return [APIKeyOut(**item) for item in response.get("data", [])]
+
+    def create_api_key(self, data: APIKeyCreate) -> APIKeyCreatedOut:
+        """Create an API key and return its one-time secret token."""
+        return APIKeyCreatedOut(
+            **self.client._request("post", "/v1/users/self/api-keys", data=data.model_dump(exclude_none=True))
+        )
+
+    def delete_api_key(self, id: str):
+        """Delete one of the current user's API keys."""
+        self.client._request("delete", f"/v1/users/self/api-keys/{id}")
+
     def delete_account(self):
         """Permanently delete the current user's account.
 
@@ -1303,11 +1590,15 @@ class TemplatesClient:
 
     @staticmethod
     def _normalize_template_item_payload(payload: dict[str, Any]) -> dict[str, Any]:
-        """Map legacy template-create-item label keys to v23 tag keys."""
+        """Map legacy template-create-item keys to v0.26 entity keys."""
         if "labelIds" in payload and "tagIds" not in payload:
             payload["tagIds"] = payload.pop("labelIds")
         else:
             payload.pop("labelIds", None)
+        if "locationId" in payload and "parentId" not in payload:
+            payload["parentId"] = payload.pop("locationId")
+        else:
+            payload.pop("locationId", None)
         return payload
 
     @staticmethod
@@ -1352,11 +1643,20 @@ class TemplatesClient:
         """Delete an item template."""
         self.client._request("delete", f"/v1/templates/{id}")
 
-    def create_item_from_template(self, id: str, data: ItemTemplateCreateItemRequest) -> ItemOut:
-        """Create an item from the specified template."""
+    def create_item_from_template(
+        self, id: str, data: EntityTemplateCreateItemRequest | ItemTemplateCreateItemRequest
+    ) -> ItemOut:
+        """Backward-compatible item view of an entity created from a template."""
         payload = self._normalize_template_item_payload(data.model_dump(exclude_none=True))
         response = self.client._request("post", f"/v1/templates/{id}/create-item", data=payload)
         return ItemOut(**ItemsClient._unwrap_item_response(response))
+
+    def create_entity_from_template(self, id: str, data: EntityTemplateCreateItemRequest) -> EntityOut:
+        """Create a v0.26 entity from the specified template."""
+        response = self.client._request(
+            "post", f"/v1/templates/{id}/create-item", data=data.model_dump(exclude_none=True)
+        )
+        return EntityOut(**EntitiesClient._unwrap_entity_response(response))
 
 
 class LabelMakerClient:
